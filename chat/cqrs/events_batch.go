@@ -3,9 +3,13 @@ package cqrs
 import "context"
 
 const (
-	BatchMessagesCreated   = "batchMessagesCreated"
-	BatchChatsCreated      = "batchChatsCreated"
-	BatchParticipantsAdded = "batchParticipantsAdded"
+	BatchMessagesCreated     = "batchMessagesCreated"
+	BatchChatsCreated        = "batchChatsCreated"
+	BatchParticipantsAdded   = "batchParticipantsAdded"
+	BatchEventUserChatAdded  = "batchUserChatAdded"
+	BatchEventUserChatEdited = "batchUserChatEdited"
+
+	defaultOrder = 100000
 )
 
 func (p *EventHolder) MakeBatchItem() (BatchEvent, context.Context, error) {
@@ -33,9 +37,17 @@ func (p *EventHolder) MakeBatchItem() (BatchEvent, context.Context, error) {
 			FirstElementContext: p.ctx,
 		}, p.ctx, nil
 	case *UserChatParticipantAdded:
-		return &UserChatParticipantAddedBatch{
+		return &UserChatCreatedBatch{
 			UserId: typed.UserId,
 			UserChatAddeds: []UserChatParticipantAdded{
+				*typed,
+			},
+			FirstElementContext: p.ctx,
+		}, p.ctx, nil
+	case *UserChatEdited:
+		return &UserChatEditedBatch{
+			UserId: typed.UserId,
+			UserChatEditeds: []UserChatEdited{
 				*typed,
 			},
 			FirstElementContext: p.ctx,
@@ -67,7 +79,7 @@ func (p *SingleEventBatch) GetContext() context.Context {
 	return p.ctx
 }
 func (p *SingleEventBatch) GetOrder() int {
-	return 400
+	return defaultOrder
 }
 
 type batchCommonPart struct {
@@ -97,13 +109,22 @@ type ParticipantsAddedEventBatch struct {
 	ParticipantsAddeds  []ParticipantsAdded
 }
 
-type UserChatParticipantAddedBatch struct {
+type UserChatCreatedBatch struct {
 	batchCommonPart
 
 	UserId int64
 
 	FirstElementContext context.Context
 	UserChatAddeds      []UserChatParticipantAdded
+}
+
+type UserChatEditedBatch struct {
+	batchCommonPart
+
+	UserId int64
+
+	FirstElementContext context.Context
+	UserChatEditeds     []UserChatEdited
 }
 
 func (p *MessageCreatedEventBatch) TryAppend(event EventHolder) bool {
@@ -191,7 +212,7 @@ func (p *ParticipantsAddedEventBatch) GetOrder() int {
 	return 200
 }
 
-func (p *UserChatParticipantAddedBatch) TryAppend(event EventHolder) bool {
+func (p *UserChatCreatedBatch) TryAppend(event EventHolder) bool {
 	if p.closedForAppendingNew {
 		return false
 	}
@@ -205,17 +226,59 @@ func (p *UserChatParticipantAddedBatch) TryAppend(event EventHolder) bool {
 		p.UserChatAddeds = append(p.UserChatAddeds, *typed)
 
 		return true
-		// we don't need p.closedForAppendingNew = true because there is noa authorization because this is a secondary topic which just does commands, w/o authorization logic
+		// we don't need p.closedForAppendingNew = true because there is no authorization because this is a secondary topic which just does commands, w/o authorization logic
 	}
 
 	return false
 }
-func (p *UserChatParticipantAddedBatch) GetBatchType() string {
-	return BatchEventUserChatParticipantAdded
+func (p *UserChatCreatedBatch) GetBatchType() string {
+	return BatchEventUserChatAdded
 }
-func (p *UserChatParticipantAddedBatch) GetContext() context.Context {
+func (p *UserChatCreatedBatch) GetContext() context.Context {
 	return p.FirstElementContext
 }
-func (p *UserChatParticipantAddedBatch) GetOrder() int {
+func (p *UserChatCreatedBatch) GetOrder() int {
 	return 100 // the different topic though
+}
+
+func (p *UserChatEditedBatch) TryAppend(event EventHolder) bool {
+	if p.closedForAppendingNew {
+		return false
+	}
+
+	switch typed := event.event.(type) {
+	case *UserChatEdited:
+		if typed.UserId != p.UserId {
+			return false
+		}
+
+		merged := false
+		for i := range p.UserChatEditeds {
+			if p.UserChatEditeds[i].ChatId == typed.ChatId && p.UserChatEditeds[i].ChatAction == typed.ChatAction {
+
+				p.UserChatEditeds[i].EventTime = typed.EventTime
+				p.UserChatEditeds[i].CorrelationId = typed.CorrelationId
+
+				merged = true
+			}
+		}
+
+		if !merged {
+			p.UserChatEditeds = append(p.UserChatEditeds, *typed)
+		}
+
+		return true
+		// we don't need p.closedForAppendingNew = true because there is no authorization because this is a secondary topic which just does commands, w/o authorization logic
+	}
+
+	return false
+}
+func (p *UserChatEditedBatch) GetBatchType() string {
+	return BatchEventUserChatEdited
+}
+func (p *UserChatEditedBatch) GetContext() context.Context {
+	return p.FirstElementContext
+}
+func (p *UserChatEditedBatch) GetOrder() int {
+	return defaultOrder + 100 // the different topic though, but should be bigger, because UserMessagesCreated insude SingleEventBatch has the defaultOrder
 }

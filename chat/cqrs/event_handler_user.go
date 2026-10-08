@@ -10,26 +10,14 @@ import (
 	"nkonev.name/chat/utils"
 )
 
-func getChatIds(events *UserChatParticipantAddedBatch) []int64 {
-	res := []int64{}
-	for _, v := range events.UserChatAddeds {
-		res = append(res, v.ChatId)
-	}
-
-	un := utils.Unique(res)
-	slices.Sort(un)
-
-	return un
-}
-
-func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAddedBatch) (context.Context, error) {
+func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatCreatedBatch) (context.Context, error) {
 	ctx := events.FirstElementContext
 
 	eventTypeParticipantAdded := dto.EventTypeParticipantAdded
 
 	userIds := []int64{events.UserId}
 
-	chatIds := getChatIds(events)
+	chatIds := getChatIdsFromUserChatViewCreated(events)
 
 	correlationIdByChatId := map[int64]*string{}
 	for _, v := range events.UserChatAddeds {
@@ -155,41 +143,104 @@ func (m *EventHandler) OnUserChatViewCreatedBatch(events *UserChatParticipantAdd
 	return ctx, nil
 }
 
-func (m *EventHandler) OnUserChatViewUpdated(ctx context.Context, event *UserChatEdited) error {
-	eventType := dto.EventTypeChatEdited
-
-	ctx, messageSpan := m.tr.Start(ctx, fmt.Sprintf("chat.%s", eventType))
-	defer messageSpan.End()
-
-	userIds := []int64{event.UserId}
-
-	m.lgr.DebugContext(ctx, "Sending notification about the chat to participants", "event_type", eventType, logger.AttributeUserId, event.UserId)
-
-	if event.ChatAction == ChatActionRefresh {
-		errp := m.commonProjection.OnChatViewRefreshedForPartitionUser(ctx, event.EventTime, event.UserId, event.ChatId)
-		if errp != nil {
-			return errp
-		}
-	} else if event.ChatAction == ChatActionRedraw {
-		eventType = dto.EventTypeChatRedraw
+func getChatIdsFromUserChatViewCreated(events *UserChatCreatedBatch) []int64 {
+	res := []int64{}
+	for _, v := range events.UserChatAddeds {
+		res = append(res, v.ChatId)
 	}
 
-	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, []int64{event.ChatId}, false)
+	un := utils.Unique(res)
+	slices.Sort(un)
+
+	return un
+}
+
+func getChatIdsFromUserChatViewEdited(events *UserChatEditedBatch) []int64 {
+	res := []int64{}
+	for _, v := range events.UserChatEditeds {
+		res = append(res, v.ChatId)
+	}
+
+	un := utils.Unique(res)
+	slices.Sort(un)
+
+	return un
+}
+
+func (m *EventHandler) OnUserChatsViewUpdated(events *UserChatEditedBatch) (context.Context, error) {
+	eventTypeLog := dto.EventTypeChatEdited
+
+	ctx := events.FirstElementContext
+
+	ctx, messageSpan := m.tr.Start(ctx, fmt.Sprintf("chat.%s", eventTypeLog))
+	defer messageSpan.End()
+
+	userIds := []int64{events.UserId}
+
+	m.lgr.DebugContext(ctx, "Sending notification about the chat to participants", "event_type", eventTypeLog, logger.AttributeUserId, events.UserId)
+
+	chatIds := getChatIdsFromUserChatViewEdited(events)
+
+	type eventElement struct {
+		correlationId *string
+	}
+
+	toRefresh := map[int64]*eventElement{}
+	toRefreshChatUpdatAts := []ChatUpdatedAt{}
+	toRedraw := map[int64]*eventElement{}
+
+	for i, event := range events.UserChatEditeds {
+		switch event.ChatAction {
+		case ChatActionRefresh:
+			toRefresh[event.ChatId] = &eventElement{correlationId: event.CorrelationId}
+
+			toRefreshChatUpdatAts = append(toRefreshChatUpdatAts, ChatUpdatedAt{
+				UpdatedAt: event.EventTime,
+				ChatId:    event.ChatId,
+			})
+		case ChatActionRedraw:
+			toRedraw[event.ChatId] = &eventElement{correlationId: event.CorrelationId}
+		default:
+			return ctx, fmt.Errorf("Unknown eventAction: %v at idx %v", event.ChatAction, i)
+		}
+	}
+
+	if len(toRefreshChatUpdatAts) > 0 {
+		errp := m.commonProjection.OnChatViewsRefreshedForPartitionUser(ctx, events.UserId, toRefreshChatUpdatAts)
+		if errp != nil {
+			return ctx, errp
+		}
+	}
+
+	chatViews, _, err := m.enrichingProjection.GetChatsEnriched(ctx, userIds, int32(len(userIds)), nil, true, false, false, dto.NoSearchString, chatIds, false)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 
 	for _, cv := range chatViews {
-		err = m.rabbitmqOutputEventPublisher.Publish(ctx, event.CorrelationId, dto.GlobalUserEvent{
-			UserId:           cv.BehalfUserId,
-			EventType:        eventType,
-			ChatNotification: &cv,
-		})
-		if err != nil {
-			m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, err)
+		if toRefr := toRefresh[cv.Id]; toRefr != nil {
+			err = m.rabbitmqOutputEventPublisher.Publish(ctx, toRefr.correlationId, dto.GlobalUserEvent{
+				UserId:           cv.BehalfUserId,
+				EventType:        dto.EventTypeChatEdited,
+				ChatNotification: &cv,
+			})
+			if err != nil {
+				m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, err)
+			}
+		}
+
+		if toRedr := toRedraw[cv.Id]; toRedr != nil {
+			err = m.rabbitmqOutputEventPublisher.Publish(ctx, toRedr.correlationId, dto.GlobalUserEvent{
+				UserId:           cv.BehalfUserId,
+				EventType:        dto.EventTypeChatRedraw,
+				ChatNotification: &cv,
+			})
+			if err != nil {
+				m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, err)
+			}
 		}
 	}
-	return nil
+	return ctx, nil
 
 }
 

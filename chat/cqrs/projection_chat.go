@@ -407,37 +407,55 @@ func (m *CommonProjection) OnChatNotificationSettingsSetted(ctx context.Context,
 	return errOuter
 }
 
+type ChatUpdatedAt struct {
+	ChatId    int64
+	UpdatedAt time.Time
+}
+
 // called in cases when chat should lift because of changing update_date_time
 // in other cases (for example, read all the messages in the chat), when no need to update th timestamp - we should use another method
-func (m *CommonProjection) OnChatViewRefreshedForPartitionUser(
+func (m *CommonProjection) OnChatViewsRefreshedForPartitionUser(
 	ctx context.Context,
-	updatedAt time.Time,
 	participantId int64, // current participant
-	chatId int64,
+	chatUpdateds []ChatUpdatedAt,
 ) error {
-	errOuter := db.Transact(ctx, m.db, func(tx *db.Tx) error {
-		// in order not to have a potential race condition
-		// for example "by upserting refresh view we can resurrect view of the newly removed participant in case message add"
-		// we shouldn't upsert into chat_user_view
-		// we can only update it here
+	// in order not to have a potential race condition
+	// for example "by upserting refresh view we can resurrect view of the newly removed participant in case message add"
+	// we shouldn't upsert into chat_user_view
+	// we can only update it here
 
-		// for the cases like renaming chat, ...
-		// the db was updated earlier, here we need to update chat_user_view.update_date_time
+	// for the cases like renaming chat, ...
+	// the db was updated earlier, here we need to update chat_user_view.update_date_time
 
-		// to eliminate unnecessary chat_user_view writes in participant changed
-		_, err := tx.ExecContext(ctx, `
-				update chat_user_view set update_date_time = $3 where user_id = $1 and id = $2
-			`, participantId, chatId, updatedAt)
-		if err != nil {
-			return err
-		}
+	// to eliminate unnecessary chat_user_view writes in participant changed
 
-		return nil
-	})
+	chatIds := []int64{}
+	updatedAts := []time.Time{}
 
-	if errOuter != nil {
-		return errOuter
+	for _, v := range chatUpdateds {
+		chatIds = append(chatIds, v.ChatId)
+		updatedAts = append(updatedAts, v.UpdatedAt)
 	}
+
+	_, err := m.db.ExecContext(ctx, `
+		with input_data as (
+			select * from unnest (
+				cast($2 as bigint[])
+				,cast($3 as timestamp[])
+			) as t (
+				 chat_id
+				,updated_at
+			)
+		)
+		update chat_user_view vv
+			set update_date_time = idt.updated_at
+		from input_data idt
+		where vv.user_id = $1 and vv.id = idt.chat_id
+	`, participantId, chatIds, updatedAts)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
