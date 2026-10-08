@@ -52,7 +52,6 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 	}
 
 	chatIds := []int64{}
-	allUserIds := []int64{}
 
 	createdAtsByChatId := map[int64]time.Time{}
 	correlationIdByChatId := map[int64]*string{}
@@ -71,16 +70,13 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 			continue
 		}
 
-		userIds := event.GetParticipantIds()
-		allUserIds = append(allUserIds, userIds...)
-
 		// send an output event for the users themselves
-		for _, userId := range userIds {
+		for _, ep := range event.Participants {
 			ue := &UserChatParticipantAdded{
 				EventTime:     event.AdditionalData.CreatedAt,
 				CorrelationId: event.AdditionalData.CorrelationId,
 				ChatId:        event.ChatId,
-				UserId:        userId,
+				UserId:        ep.ParticipantId,
 				TetATet:       resp.ChatTetATets[event.ChatId],
 				TetATetSelf:   event.TetATetSelf,
 			}
