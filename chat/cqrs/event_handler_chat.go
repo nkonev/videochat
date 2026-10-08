@@ -127,8 +127,7 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 
 			sendErr := m.eventBus.Publish(ctx, ueds...)
 			if sendErr != nil {
-				m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, sendErr)
-				return nil
+				return sendErr
 			}
 
 			return nil
@@ -272,7 +271,7 @@ func (m *EventHandler) handleParticipantRemoved(ctx context.Context, additionalD
 			IsChatRemoving:          isChatRemoving,
 		})
 		if errInn != nil {
-			m.lgr.ErrorContext(ctx, "Error during sending to rabbitmq", logger.AttributeError, errInn)
+			return errInn
 		}
 	}
 
