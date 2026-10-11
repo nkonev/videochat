@@ -678,25 +678,27 @@ func (p *BatchOptimizer) Optimize(events []EventHolder) ([]BatchEvent, context.C
 	// we don't split by chatId (partitionKey) here, actual batchItem should care about it
 	// try to append event to any of batches
 	for _, eventHolder := range events {
-
+		
 		// try to append to any of existing batch items
-		var anyConsumed = false
+		var wasConsumed = false
 		for _, bi := range batchItems {
-			anyConsumed = bi.TryAppend(eventHolder)
-			if anyConsumed {
+			wasConsumed = bi.TryAppend(eventHolder)
+			if wasConsumed {
 				break
 			}
 		}
 
 		// initialize the first batch or
 		// if not appended to any of batch then create a new batch
-		if !anyConsumed {
-			bi, ctx, err := eventHolder.MakeBatchItem()
-			if err != nil {
-				return nil, ctx, err
-			}
-			batchItems = append(batchItems, bi)
+		if wasConsumed {
+			continue
 		}
+
+		bi, ctx, err := eventHolder.MakeBatchItem()
+		if err != nil {
+			return nil, ctx, err
+		}
+		batchItems = append(batchItems, bi)
 	}
 
 	slices.SortStableFunc(batchItems, func(a, b BatchEvent) int {

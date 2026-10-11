@@ -198,6 +198,12 @@ func (p *ParticipantsAddedEventBatch) TryAppend(event EventHolder) bool {
 		p.ParticipantsAddeds = append(p.ParticipantsAddeds, *typed)
 
 		return true
+	case *ChatEdited:
+		p.closedForAppendingNew = true
+		return false
+	case *ChatDeleted:
+		p.closedForAppendingNew = true
+		return false
 	}
 
 	return false
