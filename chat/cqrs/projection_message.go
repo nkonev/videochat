@@ -21,7 +21,7 @@ import (
 	"github.com/georgysavva/scany/v2/sqlscan"
 )
 
-func (m *CommonProjection) OnMessageCreatedBatch(ctx context.Context, co db.CommonOperations, events []MessageCreated) error {
+func (m *CommonProjection) OnMessageCreatedBatch(ctx context.Context, co db.CommonOperations, events []*MessageCreated) error {
 	chatIds := []int64{} // actually it's 1 chat id
 	for _, e := range events {
 		chatIds = append(chatIds, e.MessageCommoned.ChatId)
@@ -32,7 +32,7 @@ func (m *CommonProjection) OnMessageCreatedBatch(ctx context.Context, co db.Comm
 		return err
 	}
 
-	validMessageCreateds := []MessageCreated{}
+	validMessageCreateds := []*MessageCreated{}
 
 	for _, event := range events {
 		if chatsExists[event.MessageCommoned.ChatId] {

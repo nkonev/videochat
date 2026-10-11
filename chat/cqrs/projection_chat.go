@@ -38,9 +38,9 @@ func isTetATetSelf(tetATet bool, tetATetOppositeUserId *int64) bool {
 	return tetATet && tetATetOppositeUserId == nil
 }
 
-func (m *CommonProjection) OnChatCreated(ctx context.Context, events []ChatCreated) error {
+func (m *CommonProjection) OnChatCreated(ctx context.Context, events []*ChatCreated) error {
 	errOuter := db.Transact(ctx, m.db, func(tx *db.Tx) error {
-		filtered := []ChatCreated{}
+		filtered := []*ChatCreated{}
 
 		for _, event := range events {
 			if event.TetATet {

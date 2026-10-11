@@ -167,7 +167,7 @@ func getChatIdsFromUserChatViewEdited(events *UserChatEditedBatch) []int64 {
 	return un
 }
 
-func (m *EventHandler) OnUserChatsViewUpdated(events *UserChatEditedBatch) (context.Context, error) {
+func (m *EventHandler) OnUserChatsViewUpdatedBatch(events *UserChatEditedBatch) (context.Context, error) {
 	eventTypeLog := dto.EventTypeChatEdited
 
 	ctx := events.FirstElementContext
@@ -186,7 +186,7 @@ func (m *EventHandler) OnUserChatsViewUpdated(events *UserChatEditedBatch) (cont
 	}
 
 	toRefresh := map[int64]*eventElement{}
-	toRefreshChatUpdatAts := []ChatUpdatedAt{}
+	toRefreshChatUpdateAts := []ChatUpdatedAt{}
 	toRedraw := map[int64]*eventElement{}
 
 	for i, event := range events.UserChatEditeds {
@@ -194,7 +194,7 @@ func (m *EventHandler) OnUserChatsViewUpdated(events *UserChatEditedBatch) (cont
 		case ChatActionRefresh:
 			toRefresh[event.ChatId] = &eventElement{correlationId: event.CorrelationId}
 
-			toRefreshChatUpdatAts = append(toRefreshChatUpdatAts, ChatUpdatedAt{
+			toRefreshChatUpdateAts = append(toRefreshChatUpdateAts, ChatUpdatedAt{
 				UpdatedAt: event.EventTime,
 				ChatId:    event.ChatId,
 			})
@@ -205,8 +205,8 @@ func (m *EventHandler) OnUserChatsViewUpdated(events *UserChatEditedBatch) (cont
 		}
 	}
 
-	if len(toRefreshChatUpdatAts) > 0 {
-		errp := m.commonProjection.OnChatViewsRefreshedForPartitionUser(ctx, events.UserId, toRefreshChatUpdatAts)
+	if len(toRefreshChatUpdateAts) > 0 {
+		errp := m.commonProjection.OnChatViewsRefreshedForPartitionUser(ctx, events.UserId, toRefreshChatUpdateAts)
 		if errp != nil {
 			return ctx, errp
 		}

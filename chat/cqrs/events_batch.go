@@ -17,38 +17,38 @@ func (p *EventHolder) MakeBatchItem() (BatchEvent, context.Context, error) {
 	case *MessageCreated:
 		return &MessageCreatedEventBatch{
 			ChatId: typed.MessageCommoned.ChatId,
-			MessageCreateds: []MessageCreated{
-				*typed,
+			MessageCreateds: []*MessageCreated{
+				typed,
 			},
 			FirstElementContext: p.ctx,
 		}, p.ctx, nil
 	case *ChatCreated:
 		return &ChatCreatedEventBatch{
-			ChatCreateds: []ChatCreated{
-				*typed,
+			ChatCreateds: []*ChatCreated{
+				typed,
 			},
 			FirstElementContext: p.ctx,
 		}, p.ctx, nil
 	case *ParticipantsAdded:
 		return &ParticipantsAddedEventBatch{
-			ParticipantsAddeds: []ParticipantsAdded{
-				*typed,
+			ParticipantsAddeds: []*ParticipantsAdded{
+				typed,
 			},
 			FirstElementContext: p.ctx,
 		}, p.ctx, nil
 	case *UserChatParticipantAdded:
 		return &UserChatCreatedBatch{
 			UserId: typed.UserId,
-			UserChatAddeds: []UserChatParticipantAdded{
-				*typed,
+			UserChatAddeds: []*UserChatParticipantAdded{
+				typed,
 			},
 			FirstElementContext: p.ctx,
 		}, p.ctx, nil
 	case *UserChatEdited:
 		return &UserChatEditedBatch{
 			UserId: typed.UserId,
-			UserChatEditeds: []UserChatEdited{
-				*typed,
+			UserChatEditeds: []*UserChatEdited{
+				typed,
 			},
 			FirstElementContext: p.ctx,
 		}, p.ctx, nil
@@ -92,21 +92,21 @@ type MessageCreatedEventBatch struct {
 
 	ChatId              int64
 	FirstElementContext context.Context
-	MessageCreateds     []MessageCreated
+	MessageCreateds     []*MessageCreated
 }
 
 type ChatCreatedEventBatch struct {
 	batchCommonPart
 
 	FirstElementContext context.Context
-	ChatCreateds        []ChatCreated
+	ChatCreateds        []*ChatCreated
 }
 
 type ParticipantsAddedEventBatch struct {
 	batchCommonPart
 
 	FirstElementContext context.Context
-	ParticipantsAddeds  []ParticipantsAdded
+	ParticipantsAddeds  []*ParticipantsAdded
 }
 
 type UserChatCreatedBatch struct {
@@ -115,7 +115,7 @@ type UserChatCreatedBatch struct {
 	UserId int64
 
 	FirstElementContext context.Context
-	UserChatAddeds      []UserChatParticipantAdded
+	UserChatAddeds      []*UserChatParticipantAdded
 }
 
 type UserChatEditedBatch struct {
@@ -124,7 +124,7 @@ type UserChatEditedBatch struct {
 	UserId int64
 
 	FirstElementContext context.Context
-	UserChatEditeds     []UserChatEdited
+	UserChatEditeds     []*UserChatEdited
 }
 
 func (p *MessageCreatedEventBatch) TryAppend(event EventHolder) bool {
@@ -137,7 +137,7 @@ func (p *MessageCreatedEventBatch) TryAppend(event EventHolder) bool {
 		if typed.MessageCommoned.ChatId != p.ChatId {
 			return false
 		}
-		p.MessageCreateds = append(p.MessageCreateds, *typed)
+		p.MessageCreateds = append(p.MessageCreateds, typed)
 
 		return true
 	// those events make gotten authorization (canWriteMessage) invalid
@@ -171,7 +171,7 @@ func (p *ChatCreatedEventBatch) TryAppend(event EventHolder) bool {
 
 	switch typed := event.event.(type) {
 	case *ChatCreated:
-		p.ChatCreateds = append(p.ChatCreateds, *typed)
+		p.ChatCreateds = append(p.ChatCreateds, typed)
 
 		return true
 	}
@@ -195,7 +195,7 @@ func (p *ParticipantsAddedEventBatch) TryAppend(event EventHolder) bool {
 
 	switch typed := event.event.(type) {
 	case *ParticipantsAdded:
-		p.ParticipantsAddeds = append(p.ParticipantsAddeds, *typed)
+		p.ParticipantsAddeds = append(p.ParticipantsAddeds, typed)
 
 		return true
 	case *ChatEdited:
@@ -229,7 +229,7 @@ func (p *UserChatCreatedBatch) TryAppend(event EventHolder) bool {
 			return false
 		}
 
-		p.UserChatAddeds = append(p.UserChatAddeds, *typed)
+		p.UserChatAddeds = append(p.UserChatAddeds, typed)
 
 		return true
 		// we don't need p.closedForAppendingNew = true because there is no authorization because this is a secondary topic which just does commands, w/o authorization logic
@@ -270,7 +270,7 @@ func (p *UserChatEditedBatch) TryAppend(event EventHolder) bool {
 		}
 
 		if !merged {
-			p.UserChatEditeds = append(p.UserChatEditeds, *typed)
+			p.UserChatEditeds = append(p.UserChatEditeds, typed)
 		}
 
 		return true

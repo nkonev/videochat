@@ -383,7 +383,7 @@ func ListenUserTopic(
 			return processEvent(p.lgr, p.cfg, b, p.cqrsEventHandler.OnUserChatViewCreatedBatch)
 		},
 		BatchEventUserChatEdited: func(b BatchEvent) (context.Context, error) {
-			return processEvent(p.lgr, p.cfg, b, p.cqrsEventHandler.OnUserChatsViewUpdated)
+			return processEvent(p.lgr, p.cfg, b, p.cqrsEventHandler.OnUserChatsViewUpdatedBatch)
 		},
 		EventUserChatParticipantRemoved: func(b BatchEvent) (context.Context, error) {
 			return processEvent(p.lgr, p.cfg, b, unwrapSingleBatch(p.cqrsEventHandler.OnUserChatViewRemoved))
@@ -678,7 +678,7 @@ func (p *BatchOptimizer) Optimize(events []EventHolder) ([]BatchEvent, context.C
 	// we don't split by chatId (partitionKey) here, actual batchItem should care about it
 	// try to append event to any of batches
 	for _, eventHolder := range events {
-		
+
 		// try to append to any of existing batch items
 		var wasConsumed = false
 		for _, bi := range batchItems {
@@ -710,6 +710,39 @@ func (p *BatchOptimizer) Optimize(events []EventHolder) ([]BatchEvent, context.C
 	}
 
 	return batchItems, nil, nil
+}
+
+type WithDedupeKey[T comparable] interface {
+	GetDedupeKey() T
+}
+
+func Dedupe[K comparable, E WithDedupeKey[K], S ~[]E](ctx context.Context, lgr *logger.LoggerWrapper, inputList S) S {
+	dedupedEvents := []E{}
+
+	for _, v := range inputList {
+		var replaced = false
+
+		for j, vv := range dedupedEvents {
+
+			if v.GetDedupeKey() == vv.GetDedupeKey() {
+				dedupedEvents[j] = v
+
+				replaced = true
+
+				lgr.WarnContext(ctx, fmt.Sprintf("deduping %v and %v in favor the second (overriding)", v, vv))
+
+				break
+			}
+		}
+
+		if replaced {
+			continue
+		}
+
+		dedupedEvents = append(dedupedEvents, v)
+	}
+
+	return dedupedEvents
 }
 
 func (p *KafkaListener) processEventBatch(

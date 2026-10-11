@@ -771,3 +771,11 @@ func (s *UserChatEdited) GetEventTopic() EventTopic {
 func (s *UserChatParticipantRemoved) GetEventTopic() EventTopic {
 	return EventTopicUser
 }
+
+func (s *MessageCreated) GetDedupeKey() string {
+	return fmt.Sprintf("%d:%d", s.MessageCommoned.ChatId, s.MessageCommoned.Id)
+}
+
+func (s *ChatCreated) GetDedupeKey() string {
+	return fmt.Sprintf("%d", s.ChatId)
+}

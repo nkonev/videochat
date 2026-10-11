@@ -50,8 +50,8 @@ func TestBasic(t *testing.T) {
 	require.Equal(t, chatId, messageCreateBatch.ChatId)
 
 	require.Equal(t, 2, len(messageCreateBatch.MessageCreateds))
-	require.Equal(t, *messageCreated1, messageCreateBatch.MessageCreateds[0])
-	require.Equal(t, *messageCreated2, messageCreateBatch.MessageCreateds[1])
+	require.Equal(t, messageCreated1, messageCreateBatch.MessageCreateds[0])
+	require.Equal(t, messageCreated2, messageCreateBatch.MessageCreateds[1])
 }
 
 func mockMessageCreated(

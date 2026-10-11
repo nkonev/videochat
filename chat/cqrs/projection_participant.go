@@ -20,7 +20,7 @@ type OnParticipantAddedResponse struct {
 	ChatTetATets map[int64]bool
 }
 
-func getChatIdsFromPa(evs []ParticipantsAdded) []int64 {
+func getChatIdsFromPa(evs []*ParticipantsAdded) []int64 {
 	res := []int64{}
 	for _, v := range evs {
 		res = append(res, v.ChatId)
@@ -29,7 +29,18 @@ func getChatIdsFromPa(evs []ParticipantsAdded) []int64 {
 	return res
 }
 
-func (m *CommonProjection) OnBatchParticipantsAdded(ctx context.Context, events []ParticipantsAdded) (*OnParticipantAddedResponse, error) {
+type participantAddDto struct {
+	participantId  int64
+	admin          bool
+	chatId         int64
+	createDateTime time.Time
+}
+
+func (s *participantAddDto) GetDedupeKey() string {
+	return fmt.Sprintf("%d:%d", s.chatId, s.participantId)
+}
+
+func (m *CommonProjection) OnBatchParticipantsAdded(ctx context.Context, events []*ParticipantsAdded) (*OnParticipantAddedResponse, error) {
 	res, errOuter := db.TransactWithResult(ctx, m.db, func(tx *db.Tx) (*OnParticipantAddedResponse, error) {
 		cids := getChatIdsFromPa(events)
 		existedChats, err := m.checkAreChatsExist(ctx, tx, cids)
@@ -42,7 +53,7 @@ func (m *CommonProjection) OnBatchParticipantsAdded(ctx context.Context, events 
 			return nil, err
 		}
 
-		filteredEvents := []ParticipantsAdded{}
+		filteredEvents := []*ParticipantsAdded{}
 
 		for _, event := range events {
 			chatExists := existedChats[event.ChatId]
@@ -53,18 +64,30 @@ func (m *CommonProjection) OnBatchParticipantsAdded(ctx context.Context, events 
 			filteredEvents = append(filteredEvents, event)
 		}
 
+		tmp := []*participantAddDto{}
+		for _, event := range filteredEvents {
+			for _, item := range event.Participants {
+				tmp = append(tmp, &participantAddDto{
+					participantId:  item.ParticipantId,
+					admin:          item.ChatAdmin,
+					chatId:         event.ChatId,
+					createDateTime: event.AdditionalData.CreatedAt,
+				})
+			}
+		}
+
+		deduped := Dedupe(ctx, m.lgr, tmp)
+
 		participantIds := []int64{}
 		admins := []bool{}
 		chatIds := []int64{}
 		createDateTimes := []time.Time{}
 
-		for _, event := range filteredEvents {
-			for _, item := range event.Participants {
-				participantIds = append(participantIds, item.ParticipantId)
-				admins = append(admins, item.ChatAdmin)
-				chatIds = append(chatIds, event.ChatId)
-				createDateTimes = append(createDateTimes, event.AdditionalData.CreatedAt)
-			}
+		for _, v := range deduped {
+			participantIds = append(participantIds, v.participantId)
+			admins = append(admins, v.admin)
+			chatIds = append(chatIds, v.chatId)
+			createDateTimes = append(createDateTimes, v.createDateTime)
 		}
 
 		_, err = tx.ExecContext(ctx, `
@@ -122,7 +145,7 @@ func (m *CommonProjection) OnBatchParticipantsAdded(ctx context.Context, events 
 	return res, nil
 }
 
-func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int64, userChatAddeds []UserChatParticipantAdded) error {
+func (m *CommonProjection) OnUserChatViewCreated(ctx context.Context, userId int64, userChatAddeds []*UserChatParticipantAdded) error {
 
 	var (
 		userIds      []int64     = []int64{}

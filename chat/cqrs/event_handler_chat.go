@@ -30,7 +30,7 @@ func (m *EventHandler) OnBatchParticipantsAdded(eventBatch *ParticipantsAddedEve
 		return ctx, err
 	}
 
-	filteredParticipantsAddeds := []ParticipantsAdded{}
+	filteredParticipantsAddeds := []*ParticipantsAdded{}
 
 	for idx, event := range eventBatch.ParticipantsAddeds {
 		adt, ok := adts[int64(idx)]
@@ -384,7 +384,7 @@ func (m *EventHandler) OnParticipantChanged(ctx context.Context, event *Particip
 func (m *EventHandler) OnBatchChatsCreated(events *ChatCreatedEventBatch) (context.Context, error) {
 	// we don't check authorization for the chat creation
 
-	authorizedEvents := []ChatCreated{}
+	authorizedEvents := []*ChatCreated{}
 
 	for _, event := range events.ChatCreateds {
 
@@ -401,7 +401,9 @@ func (m *EventHandler) OnBatchChatsCreated(events *ChatCreatedEventBatch) (conte
 		authorizedEvents = append(authorizedEvents, event)
 	}
 
-	err := m.commonProjection.OnChatCreated(events.FirstElementContext, authorizedEvents)
+	dedupedEvents := Dedupe(events.FirstElementContext, m.lgr, authorizedEvents)
+
+	err := m.commonProjection.OnChatCreated(events.FirstElementContext, dedupedEvents)
 	if err != nil {
 		return nil, err
 	}
@@ -548,8 +550,10 @@ func (m *EventHandler) OnBatchMessagesCreated(event *MessageCreatedEventBatch) (
 		}
 	}
 
-	if len(event.MessageCreateds) > 0 {
-		err := m.onMessagesCreated(event.FirstElementContext, event.MessageCreateds, event.ChatId)
+	dedupedEvents := Dedupe(event.FirstElementContext, m.lgr, event.MessageCreateds)
+
+	if len(dedupedEvents) > 0 {
+		err := m.onMessagesCreated(event.FirstElementContext, dedupedEvents, event.ChatId)
 		if err != nil {
 			return nil, err
 		}
@@ -587,7 +591,7 @@ func (m *EventHandler) getMemoizedUserOnlines(ctx context.Context, participantId
 	}
 }
 
-func (m *EventHandler) convertMessageCreatedToUser(messageEvents []MessageCreated) []UserMessageId {
+func (m *EventHandler) convertMessageCreatedToUser(messageEvents []*MessageCreated) []UserMessageId {
 	res := make([]UserMessageId, 0, len(messageEvents))
 	for _, event := range messageEvents {
 		res = append(res, UserMessageId{
@@ -598,7 +602,7 @@ func (m *EventHandler) convertMessageCreatedToUser(messageEvents []MessageCreate
 	return res
 }
 
-func (m *EventHandler) onMessagesCreated(ctx context.Context, events []MessageCreated, chatId int64) error {
+func (m *EventHandler) onMessagesCreated(ctx context.Context, events []*MessageCreated, chatId int64) error {
 	eventType := dto.EventTypeMessageCreated
 
 	ctx, messageSpan := m.tr.Start(ctx, fmt.Sprintf("message.%s", eventType))
@@ -614,8 +618,8 @@ func (m *EventHandler) onMessagesCreated(ctx context.Context, events []MessageCr
 		return err
 	}
 
-	authorizedMessageEvents := []MessageCreated{}
-	authorizedMessageEventsByMessageId := map[int64]MessageCreated{}
+	authorizedMessageEvents := []*MessageCreated{}
+	authorizedMessageEventsByMessageId := map[int64]*MessageCreated{}
 
 	for _, msg := range events {
 		adt := adts[msg.AdditionalData.BehalfUserId]
@@ -869,7 +873,7 @@ func (m *EventHandler) onMessagesCreated(ctx context.Context, events []MessageCr
 	return nil
 }
 
-func convertToMessageOwners(events []MessageCreated) []MessageOwner {
+func convertToMessageOwners(events []*MessageCreated) []MessageOwner {
 	res := make([]MessageOwner, 0, len(events))
 	for _, v := range events {
 		res = append(res, MessageOwner{
