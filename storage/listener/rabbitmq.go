@@ -10,7 +10,7 @@ import (
 )
 
 // see AMQP minio's endpoint in docker-compose
-const MinioEventsExchange = "minio-events"
+const MinioEventsExchange = "rustfs-events"
 
 type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
 

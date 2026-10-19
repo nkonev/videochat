@@ -12,7 +12,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/minio/minio-go/v7/pkg/notification"
 	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -283,14 +282,6 @@ func configureAwsS3() *awsS3.S3 {
 	}
 	sess := session.Must(session.NewSession(&cfg))
 	svc := awsS3.New(sess)
-
-	//svc.GetBucketNotificationConfiguration()
-	// svc.PutBucketNotificationConfiguration(&awsS3.PutBucketNotificationConfigurationInput{
-	// 	Bucket: new("files"),
-	// 	NotificationConfiguration: &awsS3.NotificationConfiguration{
-	// 	},
-	// })
-
 	return svc
 }
 
@@ -354,7 +345,7 @@ func runEcho(lgr *logger.Logger, e *echo.Echo) {
 	lgr.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient) (*utils.MinioConfig, error) {
+func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient, svc *awsS3.S3) (*utils.MinioConfig, error) {
 	var ua, ca, f, p string
 	var err error
 	if ua, err = utils.EnsureAndGetUserAvatarBucket(lgr, client); err != nil {
@@ -390,22 +381,42 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient) 
 	}
 	if shouldCreateSubscription {
 		lgr.Infof("Will create subscription for bucket %v to arn %v", f, arn)
-		err := client.SetBucketNotification(context.Background(), f, notification.Configuration{
-			QueueConfigs: []notification.QueueConfig{
-				notification.QueueConfig{
-					Queue: arn,
-					Config: notification.Config{
-						Events: []notification.EventType{
+
+		bucketName := viper.GetString("minio.bucket.files")
+
+		//svc.GetBucketNotificationConfiguration()
+		output, err := svc.PutBucketNotificationConfiguration(&awsS3.PutBucketNotificationConfigurationInput{
+			Bucket: new(bucketName),
+			NotificationConfiguration: &awsS3.NotificationConfiguration{
+				QueueConfigurations: []*awsS3.QueueConfiguration{
+					&awsS3.QueueConfiguration{
+						QueueArn: &arn,
+						Events: aws.StringSlice([]string{
 							utils.ObjectCreated + ":*",
 							utils.ObjectRemoved + ":*",
-						},
+						}),
 					},
 				},
 			},
 		})
+
+		// err := client.SetBucketNotification(context.Background(), f, notification.Configuration{
+		// 	QueueConfigs: []notification.QueueConfig{
+		// 		notification.QueueConfig{
+		// 			Queue: arn,
+		// 			Config: notification.Config{
+		// 				Events: []notification.EventType{
+		// 					utils.ObjectCreated + ":*",
+		// 					utils.ObjectRemoved + ":*",
+		// 				},
+		// 			},
+		// 		},
+		// 	},
+		// })
 		if err != nil {
 			return nil, err
 		}
+		lgr.Info("PutBucketNotificationConfiguration response is: %v", output)
 	}
 	return &utils.MinioConfig{
 		UserAvatar:   ua,
