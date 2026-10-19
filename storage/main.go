@@ -374,12 +374,15 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient) 
 		return nil, err
 	}
 
-	subscriptionName := "arn:rustfs:sqs:us-east-1:primary:amqp"
+	location := viper.GetString("minio.location")
+
+	arn := "arn:rustfs:sqs:" + location + ":primary:amqp"
+
 	shouldCreateSubscription := true
 	queueConfigs := bucketNotification.QueueConfigs
 	if queueConfigs != nil {
 		for _, qc := range queueConfigs {
-			if qc.Queue == subscriptionName {
+			if qc.Queue == arn {
 				shouldCreateSubscription = false
 				break
 			}
@@ -390,7 +393,7 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient) 
 		err := client.SetBucketNotification(context.Background(), f, notification.Configuration{
 			QueueConfigs: []notification.QueueConfig{
 				notification.QueueConfig{
-					Queue: subscriptionName,
+					Queue: arn,
 					Config: notification.Config{
 						Events: []notification.EventType{
 							utils.ObjectCreated + ":*",
