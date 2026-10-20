@@ -37,10 +37,11 @@ http:
       loadBalancer:
         servers:
           - url: http://host.docker.internal:1230
-    minio-service:
+    s3-service:
       loadBalancer:
         servers:
-          - url: http://minio:9000
+          - url: http://rustfs:9000
+    # TODO rustfs
     minio-ui-service:
       loadBalancer:
         servers:
@@ -190,13 +191,13 @@ http:
       service: notification-service
       middlewares:
         - "retry-middleware"
-    minio-router:
+    s3-router:
       rule: "PathPrefix(`/api/s3`)"
-      service: minio-service
+      service: s3-service
       middlewares:
-        - "minio-strip-prefix-middleware"
+        - "s3-strip-prefix-middleware"
         - "retry-middleware"
-        - "minio-fix-host-middleware"
+        - "s3-fix-host-middleware"
     minio-ui-router:
       rule: "PathPrefix(`/minio`)"
       service: minio-ui-service
@@ -240,11 +241,11 @@ http:
       stripPrefix:
         prefixes:
           - "/api/livekit"
-    minio-strip-prefix-middleware:
+    s3-strip-prefix-middleware:
       stripPrefix:
         prefixes:
           - "/api/s3"
-    minio-fix-host-middleware:
+    s3-fix-host-middleware:
       headers:
         customRequestHeaders:
           Host: "127.0.0.1:39000"
