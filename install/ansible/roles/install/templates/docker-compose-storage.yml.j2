@@ -37,6 +37,7 @@ services:
         - STORAGE_MINIO.INTERCONTAINERURL=http://minio:9000
         - STORAGE_MINIO.PUBLICDOWNLOADTTL=24h
         - STORAGE_MINIO.PUBLICUPLOADTTL=24h
+        # TODO rustfs
         - STORAGE_MINIO.ACCESSKEYID={{ minio_user }}
         - STORAGE_MINIO.SECRETACCESSKEY={{ minio_password }}
         - STORAGE_CHAT.URL.BASE=http://chat:1235
