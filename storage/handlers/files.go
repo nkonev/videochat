@@ -163,12 +163,12 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	}
 
 	// check enough size taking on account free disk space probe (see LimitsHandler)
-	ok, consumption, available, err := checkUserLimit(c.Request().Context(), h.lgr, h.minio, bucketName, userPrincipalDto, reqDto.FileSize, h.restClient)
+	ok, err = checkUserLimit(userPrincipalDto)
 	if err != nil {
 		return err
 	}
 	if !ok {
-		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
+		return c.JSON(http.StatusOK, &utils.H{"status": "limited"})
 	}
 
 	correlationId := c.Request().Header.Get(headerCorrelationId)
@@ -353,7 +353,7 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 	// end check
 
 	fileSize := int64(len(bindTo.Text))
-	userLimitOk, _, _, err := checkUserLimit(c.Request().Context(), h.lgr, h.minio, bucketName, userPrincipalDto, fileSize, h.restClient)
+	userLimitOk, err := checkUserLimit(userPrincipalDto)
 	if err != nil {
 		return err
 	}
@@ -1126,21 +1126,21 @@ func (h *FilesHandler) LimitsHandler(c echo.Context) error {
 		return c.NoContent(http.StatusUnauthorized)
 	}
 
-	bucketName := h.minioConfig.Files
-
 	desiredSize, err := utils.ParseInt64(c.QueryParam("desiredSize"))
 	if err != nil {
 		return err
 	}
-	ok, consumption, available, err := checkUserLimit(c.Request().Context(), h.lgr, h.minio, bucketName, userPrincipalDto, desiredSize, h.restClient)
+	h.lgr.WithTracing(c.Request().Context()).Infof("UserId: %v, Desired size is: %v", userPrincipalDto.UserId, desiredSize)
+
+	ok, err = checkUserLimit(userPrincipalDto)
 	if err != nil {
 		return err
 	}
 
 	if !ok {
-		return c.JSON(http.StatusOK, &utils.H{"status": "oversized", "used": consumption, "available": available})
+		return c.JSON(http.StatusOK, &utils.H{"status": "limited"})
 	} else {
-		return c.JSON(http.StatusOK, &utils.H{"status": "ok", "used": consumption, "available": available})
+		return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
 	}
 }
 

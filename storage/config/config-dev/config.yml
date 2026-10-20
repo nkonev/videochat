@@ -82,9 +82,6 @@ aaa:
 
 limits:
   enabled: false
-  default:
-    # 512 megabytes
-    all.users.limit: 536870912
 
 selfUrls: "http://localhost:8081,"
 
