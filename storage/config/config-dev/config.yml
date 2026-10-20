@@ -4,7 +4,8 @@ server:
   body.limit: "100G"
 
 logger:
-  level: info
+  # TODO rustfs
+  level: debug
   dir: "log"
   filename: "file.log"
   writeToFile: true
@@ -100,17 +101,20 @@ redis:
 
 schedulers:
   cleanFilesOfDeletedChatTask:
-    enabled: true
+    # TODO rustfs
+    enabled: false
     cron: "0 * * * * *"
     batchChats: 20
     expiration: "30m"
     chatCount: 100
   actualizeGeneratedFilesTask:
-    enabled: true
+    # TODO rustfs
+    enabled: false
     cron: "0 * * * * *"
     expiration: "30m"
   actualizeMetadataCacheTask:
-    enabled: true
+    # TODO rustfs
+    enabled: false
     cron: "0 */5 * * * *"
     expiration: "30m"
     # admin

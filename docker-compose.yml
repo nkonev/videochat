@@ -167,8 +167,9 @@ services:
       backend:
     environment:
       # - RUSTFS_OBS_LOGGER_LEVEL=debug
-      # then docker  exec -it videochat-rustfs-1 sh
-      # less /logs/rustfs.log
+      # then docker exec -it videochat-rustfs-1 sh
+      # tail -n 1000 -f /logs/rustfs.log
+      - RUSTFS_REGION=europe-east
       - RUSTFS_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
       - RUSTFS_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
       # https://github.com/rustfs/rustfs/issues/1784
@@ -179,9 +180,9 @@ services:
       - RUSTFS_NOTIFY_AMQP_ENABLE_PRIMARY=true
       - RUSTFS_NOTIFY_AMQP_URL_PRIMARY=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
       - RUSTFS_NOTIFY_AMQP_EXCHANGE_PRIMARY=rustfs-events
-      - RUSTFS_NOTIFY_AMQP_ROUTING_KEY=key
+      - RUSTFS_NOTIFY_AMQP_ROUTING_KEY=routingkey1
       # - RUSTFS_NOTIFY_AMQP_EXCHANGE_TYPE_PRIMARY=direct
-      - RUSTFS_NOTIFY_AMQP_MANDATORY_PRIMARY=false
+      - RUSTFS_NOTIFY_AMQP_MANDATORY_PRIMARY=true
       - RUSTFS_NOTIFY_AMQP_PERSISTENT_PRIMARY=true
       # - RUSTFS_NOTIFY_AMQP_NO_WAIT_PRIMARY=off
       # - RUSTFS_NOTIFY_AMQP_AUTO_DELETED_PRIMARY=off
