@@ -360,7 +360,10 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient, 
 	if p, err = utils.EnsureAndGetFilesPreviewBucket(lgr, client); err != nil {
 		return nil, err
 	}
-	bucketNotification, err := client.GetBucketNotification(context.Background(), f)
+
+	bucketNotification, err := svc.GetBucketNotificationConfiguration(&awsS3.GetBucketNotificationConfigurationRequest{
+		Bucket: &f,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -370,13 +373,11 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient, 
 	arn := "arn:rustfs:sqs:" + location + ":primary:amqp"
 
 	shouldCreateSubscription := true
-	queueConfigs := bucketNotification.QueueConfigs
-	if queueConfigs != nil {
-		for _, qc := range queueConfigs {
-			if qc.Queue == arn {
-				shouldCreateSubscription = false
-				break
-			}
+	queueConfigs := bucketNotification.QueueConfigurations
+	for _, qc := range queueConfigs {
+		if *qc.QueueArn == arn {
+			shouldCreateSubscription = false
+			break
 		}
 	}
 	if shouldCreateSubscription {
@@ -384,7 +385,6 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient, 
 
 		bucketName := viper.GetString("minio.bucket.files")
 
-		//svc.GetBucketNotificationConfiguration()
 		output, err := svc.PutBucketNotificationConfiguration(&awsS3.PutBucketNotificationConfigurationInput{
 			Bucket: new(bucketName),
 			NotificationConfiguration: &awsS3.NotificationConfiguration{
@@ -400,19 +400,6 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient, 
 			},
 		})
 
-		// err := client.SetBucketNotification(context.Background(), f, notification.Configuration{
-		// 	QueueConfigs: []notification.QueueConfig{
-		// 		notification.QueueConfig{
-		// 			Queue: arn,
-		// 			Config: notification.Config{
-		// 				Events: []notification.EventType{
-		// 					utils.ObjectCreated + ":*",
-		// 					utils.ObjectRemoved + ":*",
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// })
 		if err != nil {
 			return nil, err
 		}
