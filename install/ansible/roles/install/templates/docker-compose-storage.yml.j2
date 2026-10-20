@@ -44,7 +44,6 @@ services:
         - STORAGE_REDIS.ADDRESS=redis:6379
         - STORAGE_REDIS.DB=3
         - STORAGE_LIMITS.ENABLED={{ storage_limits_enabled }}
-        - STORAGE_LIMITS.DEFAULT.ALL.USERS.LIMIT={{ storage_all_user_limit }}
         - STORAGE_RABBITMQ.URL=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
         - STORAGE_OTLP.ENDPOINT=victoria-traces:4317
         - STORAGE_SELFURLS=https://{{ domain }},
