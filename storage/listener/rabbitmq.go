@@ -74,7 +74,7 @@ func CreateMinioEventsChannel(lgr *logger.Logger, connection *rabbitmq.Connectio
 				return err
 			}
 
-			aQueue := createAndBind(lgr, queueName, "", MinioEventsExchange, channel)
+			aQueue := createAndBind(lgr, queueName, "routingkey1", MinioEventsExchange, channel)
 			listen(lgr, channel, aQueue, onMessage, lc)
 			return nil
 		},
