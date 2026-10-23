@@ -84,7 +84,8 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			}
 
 			// _converted.webm
-			isMessageRecordingStr := fileOjInfo.UserMetadata[services.MessageRecordingKey(true)]
+			// TODO rustfs check if it really doesn't have prefix
+			isMessageRecordingStr := fileOjInfo.UserMetadata[services.MessageRecordingKey()]
 			isMessageRecording := utils.GetBoolean(isMessageRecordingStr)
 
 			if err != nil {

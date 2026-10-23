@@ -529,44 +529,24 @@ func GetOriginalKeyFromMetadata(userMetadata minio.StringMap, hasAmzPrefix bool)
 	return originalKeyParam, nil
 }
 
-func OwnerIdKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(ownerIdKey)
+func OwnerIdKey() string {
+	return ownerIdKey
 }
 
-func CorrelationIdKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(correlationIdKey)
+func CorrelationIdKey() string {
+	return correlationIdKey
 }
 
-func ConferenceRecordingKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(conferenceRecordingKey)
+func ConferenceRecordingKey() string {
+	return conferenceRecordingKey
 }
 
-func MessageRecordingKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(messageRecordingKey)
+func MessageRecordingKey() string {
+	return messageRecordingKey
 }
 
-func TimestampKey(hasAmzPrefix bool) string {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-	return prefix + strings.Title(timestampKey)
+func TimestampKey() string {
+	return timestampKey
 }
 
 func SerializeTags(published bool) map[string]string {
