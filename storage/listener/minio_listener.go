@@ -42,15 +42,15 @@ func CreateMinioEventsListener(
 		eventName := gjson.Get(strData, "EventName").String()
 		key := gjson.Get(strData, "Key").String()
 		userMetadata := gjson.Get(strData, "Records.0.s3.object.userMetadata") // empty in case delete
-		ownerId := userMetadata.Get(services.OwnerIdKey(true)).Int()
-		correlationIdStr := userMetadata.Get(services.CorrelationIdKey(true)).String()
-		isConferenceRecording := userMetadata.Get(services.ConferenceRecordingKey(true)).Bool()
-		isMessageRecording := userMetadata.Get(services.MessageRecordingKey(true)).Bool()
+		ownerId := userMetadata.Get(services.OwnerIdKey()).Int()
+		correlationIdStr := userMetadata.Get(services.CorrelationIdKey()).String()
+		isConferenceRecording := userMetadata.Get(services.ConferenceRecordingKey()).Bool()
+		isMessageRecording := userMetadata.Get(services.MessageRecordingKey()).Bool()
 		var correlationId *string
 		if correlationIdStr != "" {
 			correlationId = &correlationIdStr
 		}
-		timestamp := userMetadata.Get(services.TimestampKey(true)).Int() // unix milli in UTC
+		timestamp := userMetadata.Get(services.TimestampKey()).Int() // unix milli in UTC
 
 		normalizedKey := utils.StripBucketName(key, minioConfig.Files)
 		workingChatId, err := utils.ParseChatId(normalizedKey)
