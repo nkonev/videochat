@@ -157,7 +157,7 @@ services:
         max-file: "1"
 
   rustfs:
-    image: rustfs/rustfs:1.0.1
+    image: rustfs/rustfs:1.0.3
     hostname: rustfs
     restart: unless-stopped
     ports:
