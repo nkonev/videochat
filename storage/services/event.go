@@ -34,20 +34,13 @@ type EventService struct {
 	lgr          *logger.Logger
 }
 
-func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType) *HandleEventResponse {
+func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, minioEvent *dto.MinioEvent) *HandleEventResponse {
 	s.lgr.WithTracing(ctx).Debugf("Got %v %v", normalizedKey, eventType)
 
 	var err error
 
-	var objectInfo minio.ObjectInfo
 	var tagging *tags.Tags
 	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-		objectInfo, err = s.minio.StatObject(ctx, s.minioConfig.Files, normalizedKey, minio.StatObjectOptions{})
-		if err != nil {
-			s.lgr.WithTracing(ctx).Errorf("Error during stat %v", err)
-			return nil
-		}
-
 		tagging, err = s.minio.GetObjectTagging(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectTaggingOptions{})
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during getting tags %v", err)
@@ -58,29 +51,25 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 	var users map[int64]*dto.User = map[int64]*dto.User{}
 	var fileOwnerId int64
 	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
-		fileOwnerId, _, _, err = DeserializeMetadata(objectInfo.UserMetadata, false)
-		if err != nil {
-			s.lgr.WithTracing(ctx).Errorf("Error get metadata: %v", err)
+		if minioEvent == nil {
+			s.lgr.WithTracing(ctx).Errorf("nil minioEvent %v", err)
 			return nil
 		}
-
 		var participantIdSet = map[int64]bool{}
 		participantIdSet[fileOwnerId] = true
 		users = GetUsersRemotelyOrEmpty(s.lgr, participantIdSet, s.client, ctx)
 	}
 	return &HandleEventResponse{
-		objectInfo:  &objectInfo,
-		tagging:     tagging,
-		users:       users,
-		fileOwnerId: fileOwnerId,
+		minioEvent: minioEvent,
+		tagging:    tagging,
+		users:      users,
 	}
 }
 
 type HandleEventResponse struct {
-	objectInfo  *minio.ObjectInfo
-	tagging     *tags.Tags
-	users       map[int64]*dto.User
-	fileOwnerId int64
+	minioEvent *dto.MinioEvent
+	tagging    *tags.Tags
+	users      map[int64]*dto.User
 }
 
 func (r *HandleEventResponse) GetTags() (*bool, error) {
@@ -94,11 +83,11 @@ func (r *HandleEventResponse) GetTags() (*bool, error) {
 	return &published, nil
 }
 
-func (r *HandleEventResponse) GetObjectInfo() *minio.ObjectInfo {
+func (r *HandleEventResponse) GetMinioEvent() *dto.MinioEvent {
 	if r == nil {
 		return nil
 	}
-	return r.objectInfo
+	return r.minioEvent
 }
 
 func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse, mce *dto.MetadataCache) {
@@ -116,7 +105,11 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 					s.lgr.WithTracing(ctx).Errorf("Error get file info: %v, skipping", err)
 					continue
 				}
-				fileInfo.Owner = response.users[response.fileOwnerId]
+				if response.minioEvent == nil {
+					s.lgr.WithTracing(ctx).Errorf("nil minioEvent, skipping", err)
+					continue
+				}
+				fileInfo.Owner = response.users[response.minioEvent.OwnerId]
 			} else {
 				s.lgr.WithTracing(ctx).Errorf("Missed objectInfo for %v", normalizedKey)
 				continue

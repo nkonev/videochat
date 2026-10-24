@@ -205,7 +205,7 @@ func (srv *ActualizeMetadataCacheService) tryGetTags(ctx context.Context, fileOj
 
 func (srv *ActualizeMetadataCacheService) tryGetMetadata(ctx context.Context, fileOjInfo minio.ObjectInfo) (int64, string, int64, error) {
 	// metadata can be absent because of poor backup
-	ownerId, correlationId, timestamp, err := services.DeserializeMetadata(fileOjInfo.UserMetadata, true)
+	ownerId, correlationId, timestamp, err := services.DeserializeMetadataFromMap(fileOjInfo.UserMetadata)
 	if err != nil {
 		fallbackUserId := viper.GetInt64("schedulers.actualizeMetadataCacheTask.fallbackOwnerId")
 

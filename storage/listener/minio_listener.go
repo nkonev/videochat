@@ -42,6 +42,7 @@ func CreateMinioEventsListener(
 		eventName := gjson.Get(strData, "EventName").String()
 		key := gjson.Get(strData, "Key").String()
 		userMetadata := gjson.Get(strData, "Records.0.s3.object.userMetadata") // empty in case delete
+		size := gjson.Get(strData, "Records.0.s3.object.size").Int()
 		ownerId := userMetadata.Get(services.OwnerIdKey()).Int()
 		correlationIdStr := userMetadata.Get(services.CorrelationIdKey()).String()
 		isConferenceRecording := userMetadata.Get(services.ConferenceRecordingKey()).Bool()
@@ -65,6 +66,7 @@ func CreateMinioEventsListener(
 			ChatId:        workingChatId,
 			OwnerId:       ownerId,
 			CorrelationId: correlationId,
+			Size:          size,
 		}
 
 		eventType, err := utils.GetEventType(eventName, isConferenceRecording || isMessageRecording)
@@ -81,7 +83,7 @@ func CreateMinioEventsListener(
 		}
 		var eventForConvertingService = isEventForConvertingService(eventType, minioEvent, previewAlreadyExists, isMessageRecording)
 		if isEventForEventService(eventType) {
-			eventServiceResponse = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType)
+			eventServiceResponse = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType, minioEvent)
 		}
 		if isEventForPreviewService(eventType, previewAlreadyExists, normalizedKey) {
 			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent, eventForConvertingService)
@@ -189,9 +191,9 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 		published = *publishedP
 	}
 
-	objInfo := eventServiceResponse.GetObjectInfo()
-	if objInfo == nil {
-		return nil, errors.New("nil ObjectInfo")
+	me := eventServiceResponse.GetMinioEvent()
+	if me == nil {
+		return nil, errors.New("nil MinioEvent")
 	}
 
 	return &dto.MetadataCache{
@@ -201,7 +203,7 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 		OwnerId:        ownerId,
 		CorrelationId:  correlationId,
 		Published:      published,
-		FileSize:       objInfo.Size,
+		FileSize:       me.Size,
 		CreateDateTime: eventTime,
 		EditDateTime:   eventTime,
 	}, nil
