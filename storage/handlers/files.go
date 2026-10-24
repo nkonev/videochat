@@ -143,7 +143,6 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !belongs {
-		// TODO rustfs 401 because of nom or bad data in the table
 		return c.NoContent(http.StatusUnauthorized)
 	}
 	// end check
