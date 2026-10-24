@@ -31,6 +31,7 @@ import (
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/config"
 	"nkonev.name/storage/db"
+	"nkonev.name/storage/dto"
 	"nkonev.name/storage/handlers"
 	"nkonev.name/storage/listener"
 	"nkonev.name/storage/logger"
@@ -390,11 +391,11 @@ func configureMinioEntities(lgr *logger.Logger, client *s3.InternalMinioClient, 
 			NotificationConfiguration: &awsS3.NotificationConfiguration{
 				QueueConfigurations: []*awsS3.QueueConfiguration{
 					&awsS3.QueueConfiguration{
-						Id: new("primary-uploads"),
+						Id:       new("primary-uploads"),
 						QueueArn: &arn,
 						Events: aws.StringSlice([]string{
-							utils.ObjectCreated + ":*",
-							utils.ObjectRemoved + ":*",
+							dto.ObjectCreated + ":*",
+							dto.ObjectRemoved + ":*",
 						}),
 					},
 				},
