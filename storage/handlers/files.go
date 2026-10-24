@@ -865,7 +865,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 func (h *FilesHandler) sendFileDeletedToUsers(c context.Context, chatId int64, fileItemUuid string, batch []minio.ObjectInfo) {
 	bucketName := h.minioConfig.Files
 
-	eventType := utils.FILE_DELETED
+	eventType := dto.FILE_DELETED
 
 	now := time.Now().UTC()
 	err := h.restClient.GetChatParticipantIds(c, chatId, func(participantIds []int64) error {
