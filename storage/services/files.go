@@ -475,13 +475,14 @@ const xAmzMetaPrefix = "X-Amz-Meta-"
 
 // intended to use only in events processing and restoring,
 // not to use in the regular code - metadata can be absent because of poor backup
-func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64, string, int64, error) {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
+func DeserializeMetadataFromMap(userMetadata0 minio.StringMap) (int64, string, int64, error) {
+	copied := map[string]string{}
+	for k, v := range userMetadata0 {
+		// At least stat() returns Capitalized
+		copied[strings.ToLower(k)] = v
 	}
 
-	ownerIdString, ok := userMetadata[prefix+strings.Title(ownerIdKey)]
+	ownerIdString, ok := copied[ownerIdKey]
 	if !ok {
 		return 0, "", 0, errors.New("Unable to get owner id")
 	}
@@ -490,10 +491,11 @@ func DeserializeMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (int64
 		return 0, "", 0, err
 	}
 
-	correlationId := userMetadata[prefix+strings.Title(correlationIdKey)]
+	correlationId := copied[correlationIdKey]
 
 	var timestamp int64
-	timestampString, ok := userMetadata[prefix+strings.Title(timestampKey)]
+
+	timestampString, ok := copied[timestampKey]
 	if ok {
 		timestamp, _ = utils.ParseInt64(timestampString)
 	}
