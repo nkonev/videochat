@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/streadway/amqp"
-	"github.com/tidwall/gjson"
 	"go.opentelemetry.io/otel"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/db"
@@ -39,63 +38,33 @@ func CreateMinioEventsListener(
 		strData := string(bytesData)
 		lgr.WithTracing(ctx).Debugf("Received %v", strData)
 
-		eventName := gjson.Get(strData, "EventName").String()
-		key := gjson.Get(strData, "Key").String()
-		userMetadata := gjson.Get(strData, "Records.0.s3.object.userMetadata") // empty in case delete
-		size := gjson.Get(strData, "Records.0.s3.object.size").Int()
-		ownerId := userMetadata.Get(services.OwnerIdKey()).Int()
-		correlationIdStr := userMetadata.Get(services.CorrelationIdKey()).String()
-		isConferenceRecording := userMetadata.Get(services.ConferenceRecordingKey()).Bool()
-		isMessageRecording := userMetadata.Get(services.MessageRecordingKey()).Bool()
-		var correlationId *string
-		if correlationIdStr != "" {
-			correlationId = &correlationIdStr
-		}
-		timestamp := userMetadata.Get(services.TimestampKey()).Int() // unix milli in UTC
-
-		normalizedKey := utils.StripBucketName(key, minioConfig.Files)
-		workingChatId, err := utils.ParseChatId(normalizedKey)
+		meDto, err := services.DeserializeMetadataFromEvent(minioConfig.Files, strData)
 		if err != nil {
-			lgr.WithTracing(ctx).Errorf("Error during parsing chatId: %v", err)
-			return err
-		}
-
-		var minioEvent = &dto.MinioEvent{
-			EventName:     eventName,
-			Key:           key,
-			ChatId:        workingChatId,
-			OwnerId:       ownerId,
-			CorrelationId: correlationId,
-			Size:          size,
-		}
-
-		eventType, err := utils.GetEventType(eventName, isConferenceRecording || isMessageRecording)
-		if err != nil {
-			lgr.WithTracing(ctx).Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
+			lgr.WithTracing(ctx).Errorf("Error during parsing DeserializeMetadataFromEvent: %v", err)
 			return err
 		}
 
 		var eventServiceResponse *services.HandleEventResponse
 		var previewServiceResponse *services.PreviewResponse
-		previewAlreadyExists, err := isPreviewAlreadyExists(ctx, lgr, minioConfig, minioClient, normalizedKey)
+		previewAlreadyExists, err := isPreviewAlreadyExists(ctx, lgr, minioConfig, minioClient, meDto.NormalizedKey)
 		if err != nil {
 			return err
 		}
-		var eventForConvertingService = isEventForConvertingService(eventType, minioEvent, previewAlreadyExists, isMessageRecording)
-		if isEventForEventService(eventType) {
-			eventServiceResponse = eventService.HandleEvent(ctx, normalizedKey, workingChatId, eventType, minioEvent)
+		var eventForConvertingService = isEventForConvertingService(meDto.EventType, &meDto.MinioEvent, previewAlreadyExists, meDto.IsMessageRecording)
+		if isEventForEventService(meDto.EventType) {
+			eventServiceResponse = eventService.HandleEvent(ctx, meDto.NormalizedKey, meDto.ChatId, meDto.EventType, &meDto.MinioEvent)
 		}
-		if isEventForPreviewService(eventType, previewAlreadyExists, normalizedKey) {
-			previewServiceResponse = previewService.HandleMinioEvent(ctx, minioEvent, eventForConvertingService)
+		if isEventForPreviewService(meDto.EventType, previewAlreadyExists, meDto.NormalizedKey) {
+			previewServiceResponse = previewService.HandleMinioEvent(ctx, &meDto.MinioEvent, eventForConvertingService)
 		}
 
 		var mce *dto.MetadataCache
 		// store to db before sending events
-		switch eventType {
-		case utils.FILE_CREATED:
+		switch meDto.EventType {
+		case dto.FILE_CREATED:
 			fallthrough
-		case utils.FILE_UPDATED:
-			mce, err = createdDbEntity(normalizedKey, workingChatId, ownerId, correlationId, timestamp, eventServiceResponse)
+		case dto.FILE_UPDATED:
+			mce, err = createdDbEntity(meDto.NormalizedKey, meDto.ChatId, meDto.OwnerId, meDto.CorrelationId, meDto.Timestamp, eventServiceResponse)
 			if err != nil {
 				lgr.WithTracing(ctx).Errorf("Error during creating db entity: %v", err)
 				return err
@@ -105,8 +74,8 @@ func CreateMinioEventsListener(
 				lgr.WithTracing(ctx).Errorf("Error during saving to database: %v", err)
 				return err
 			}
-		case utils.FILE_DELETED:
-			mck, err := utils.BuildMetadataCacheId(normalizedKey)
+		case dto.FILE_DELETED:
+			mck, err := utils.BuildMetadataCacheId(meDto.NormalizedKey)
 			if err != nil {
 				lgr.WithTracing(ctx).Errorf("Error during creating db key: %v", err)
 				return err
@@ -117,15 +86,15 @@ func CreateMinioEventsListener(
 				return err
 			}
 		default:
-			return fmt.Errorf("Unknown case %v", eventType)
+			return fmt.Errorf("Unknown case %v", meDto.EventType)
 		}
 
-		err = client.GetChatParticipantIds(ctx, workingChatId, func(participantIds []int64) error {
-			if isEventForEventService(eventType) {
-				eventService.SendToParticipants(ctx, normalizedKey, workingChatId, eventType, participantIds, eventServiceResponse, mce)
+		err = client.GetChatParticipantIds(ctx, meDto.ChatId, func(participantIds []int64) error {
+			if isEventForEventService(meDto.EventType) {
+				eventService.SendToParticipants(ctx, meDto.NormalizedKey, meDto.ChatId, meDto.EventType, participantIds, eventServiceResponse, mce)
 			}
-			if isEventForPreviewService(eventType, previewAlreadyExists, normalizedKey) {
-				previewService.SendToParticipants(ctx, minioEvent, participantIds, previewServiceResponse)
+			if isEventForPreviewService(meDto.EventType, previewAlreadyExists, meDto.NormalizedKey) {
+				previewService.SendToParticipants(ctx, &meDto.MinioEvent, participantIds, previewServiceResponse)
 			}
 			return nil
 		})
@@ -134,27 +103,27 @@ func CreateMinioEventsListener(
 		}
 		// because converting is longer than creating the preview, we do this long job in the end, after sending preview_created event
 		if eventForConvertingService {
-			convertingService.HandleEvent(ctx, minioEvent)
+			convertingService.HandleEvent(ctx, &meDto.MinioEvent)
 		}
 
 		return nil
 	}
 }
 
-func isEventForEventService(eventType utils.EventType) bool {
-	if eventType == utils.FILE_CREATED || eventType == utils.FILE_DELETED || eventType == utils.FILE_UPDATED {
+func isEventForEventService(eventType dto.EventType) bool {
+	if eventType == dto.FILE_CREATED || eventType == dto.FILE_DELETED || eventType == dto.FILE_UPDATED {
 		return true
 	} else {
 		return false
 	}
 }
 
-func isEventForPreviewService(eventType utils.EventType, previewExists bool, normalizedKey string) bool {
-	return eventType == utils.FILE_CREATED && !previewExists && utils.IsPreviewable(normalizedKey)
+func isEventForPreviewService(eventType dto.EventType, previewExists bool, normalizedKey string) bool {
+	return eventType == dto.FILE_CREATED && !previewExists && utils.IsPreviewable(normalizedKey)
 }
 
-func isEventForConvertingService(eventType utils.EventType, minioEvent *dto.MinioEvent, previewExists, isMessageRecording bool) bool {
-	return eventType == utils.FILE_CREATED &&
+func isEventForConvertingService(eventType dto.EventType, minioEvent *dto.MinioEvent, previewExists, isMessageRecording bool) bool {
+	return eventType == dto.FILE_CREATED &&
 		isMessageRecording &&
 		utils.IsVideo(minioEvent.Key) &&
 		!previewExists // prevents the indefinite converting

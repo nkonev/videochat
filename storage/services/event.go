@@ -34,13 +34,13 @@ type EventService struct {
 	lgr          *logger.Logger
 }
 
-func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, minioEvent *dto.MinioEvent) *HandleEventResponse {
+func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, chatId int64, eventType dto.EventType, minioEvent *dto.MinioEvent) *HandleEventResponse {
 	s.lgr.WithTracing(ctx).Debugf("Got %v %v", normalizedKey, eventType)
 
 	var err error
 
 	var tagging *tags.Tags
-	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
+	if eventType == dto.FILE_CREATED || eventType == dto.FILE_UPDATED {
 		tagging, err = s.minio.GetObjectTagging(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectTaggingOptions{})
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during getting tags %v", err)
@@ -50,7 +50,7 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 
 	var users map[int64]*dto.User = map[int64]*dto.User{}
 	var fileOwnerId int64
-	if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
+	if eventType == dto.FILE_CREATED || eventType == dto.FILE_UPDATED {
 		if minioEvent == nil {
 			s.lgr.WithTracing(ctx).Errorf("nil minioEvent %v", err)
 			return nil
@@ -90,14 +90,14 @@ func (r *HandleEventResponse) GetMinioEvent() *dto.MinioEvent {
 	return r.minioEvent
 }
 
-func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType utils.EventType, participantIds []int64, response *HandleEventResponse, mce *dto.MetadataCache) {
+func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey string, chatId int64, eventType dto.EventType, participantIds []int64, response *HandleEventResponse, mce *dto.MetadataCache) {
 	now := time.Now().UTC()
 
 	// iterate over chat participants
 	for _, participantId := range participantIds {
 		var fileInfo *dto.FileInfoDto
 		var err error
-		if eventType == utils.FILE_CREATED || eventType == utils.FILE_UPDATED {
+		if eventType == dto.FILE_CREATED || eventType == dto.FILE_UPDATED {
 			if mce != nil {
 				userId := &participantId
 				fileInfo, err = s.filesService.GetFileInfo(ctx, false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, userId, mce)
@@ -114,7 +114,7 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 				s.lgr.WithTracing(ctx).Errorf("Missed objectInfo for %v", normalizedKey)
 				continue
 			}
-		} else if eventType == utils.FILE_DELETED {
+		} else if eventType == dto.FILE_DELETED {
 			fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
 			if err != nil {
 				s.lgr.WithTracing(ctx).Errorf("Error parsing fileItemUuid for %v: %v", normalizedKey, err)
