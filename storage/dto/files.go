@@ -38,3 +38,12 @@ type MinioEvent struct {
 	CorrelationId *string
 	Size          int64
 }
+
+type MinioEventWithAdditionalFields struct {
+	MinioEvent
+	Timestamp             int64
+	IsConferenceRecording bool
+	IsMessageRecording    bool
+	EventType             EventType
+	NormalizedKey         string
+}

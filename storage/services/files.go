@@ -11,6 +11,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
+	"github.com/tidwall/gjson"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
@@ -501,6 +502,53 @@ func DeserializeMetadataFromMap(userMetadata0 minio.StringMap) (int64, string, i
 	}
 
 	return ownerId, correlationId, timestamp, nil
+}
+
+func DeserializeMetadataFromEvent(filesBucketName, strData string) (*dto.MinioEventWithAdditionalFields, error) {
+	eventName := gjson.Get(strData, "EventName").String()
+	key := gjson.Get(strData, "Key").String()
+	userMetadata := gjson.Get(strData, "Records.0.s3.object.userMetadata") // empty in case delete
+	size := gjson.Get(strData, "Records.0.s3.object.size").Int()
+	ownerId := userMetadata.Get(OwnerIdKey()).Int()
+	correlationIdStr := userMetadata.Get(CorrelationIdKey()).String()
+	isConferenceRecording := userMetadata.Get(ConferenceRecordingKey()).Bool()
+	isMessageRecording := userMetadata.Get(MessageRecordingKey()).Bool()
+	var correlationId *string
+	if correlationIdStr != "" {
+		correlationId = &correlationIdStr
+	}
+	timestamp := userMetadata.Get(TimestampKey()).Int() // unix milli in UTC
+
+	normalizedKey := utils.StripBucketName(key, filesBucketName)
+	workingChatId, err := utils.ParseChatId(normalizedKey)
+	if err != nil {
+		err = fmt.Errorf("Error during parsing chatId: %v", err)
+		return nil, err
+	}
+
+	var minioEvent = &dto.MinioEvent{
+		EventName:     eventName,
+		Key:           key,
+		ChatId:        workingChatId,
+		OwnerId:       ownerId,
+		CorrelationId: correlationId,
+		Size:          size,
+	}
+
+	eventType, err := dto.GetEventType(eventName, isConferenceRecording || isMessageRecording)
+	if err != nil {
+		err = fmt.Errorf("Logical error during getting event type: %v. It can be caused by new event that is not parsed correctly", err)
+		return nil, err
+	}
+
+	return &dto.MinioEventWithAdditionalFields{
+		MinioEvent:            *minioEvent,
+		Timestamp:             timestamp,
+		IsConferenceRecording: isConferenceRecording,
+		IsMessageRecording:    isMessageRecording,
+		EventType:             eventType,
+		NormalizedKey:         normalizedKey,
+	}, nil
 }
 
 func GetKey(filename string, chatFileItemUuid string, chatId int64) string {
