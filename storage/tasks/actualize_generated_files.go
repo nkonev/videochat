@@ -84,14 +84,9 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			}
 
 			// _converted.webm
-			// TODO rustfs check if it really doesn't have prefix
 			isMessageRecordingStr := fileOjInfo.UserMetadata[services.MessageRecordingKey()]
 			isMessageRecording := utils.GetBoolean(isMessageRecordingStr)
 
-			if err != nil {
-				srv.lgr.WithTracing(c).Errorf("Unable to convert metadata for key %v: %v", fileOjInfo.Key, err)
-				continue
-			}
 			isConverting, err := srv.redisInfoService.GetOriginalConverting(c, fileOjInfo.Key)
 			if err != nil {
 				srv.lgr.WithTracing(c).Errorf("Unable to isConverting for key %v from redis: %v", fileOjInfo.Key, err)
