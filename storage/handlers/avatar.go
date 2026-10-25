@@ -14,8 +14,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/siyouyun-open/imaging"
 	"nkonev.name/storage/auth"
-	"nkonev.name/storage/logger"
 	"nkonev.name/storage/client"
+	"nkonev.name/storage/logger"
 	"nkonev.name/storage/utils"
 )
 
