@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -260,6 +263,39 @@ func configureInternalMinio() (*client.InternalMinioClient, error) {
 	return &client.InternalMinioClient{minioClient}, nil
 }
 
+type uploadParamsFromContextPresigner struct {
+	delegate *v4.Signer
+}
+
+func (s *uploadParamsFromContextPresigner) PresignHTTP(
+	ctx context.Context, credentials aws.Credentials, r *http.Request,
+	payloadHash string, service string, region string, signingTime time.Time,
+	optFns ...func(*v4.SignerOptions),
+) (url string, signedHeader http.Header, err error) {
+	pn := ctx.Value(dto.CtxKeyPartNumber)
+	uplid := ctx.Value(dto.CtxKeyUpploadId)
+
+	cloned := r.Clone(ctx)
+	turl := cloned.URL
+	qq := turl.Query()
+
+	qq.Del("x-id")
+
+	spn := utils.InterfaceToString(pn)
+	if spn != "" {
+		qq.Add("partNumber", spn)
+	}
+	suplid := utils.InterfaceToString(uplid)
+	if suplid != "" {
+		qq.Add("uploadId", suplid)
+	}
+	turl.RawQuery = qq.Encode()
+
+	cloned.URL = turl
+
+	return s.delegate.PresignHTTP(ctx, credentials, cloned, payloadHash, service, region, signingTime, optFns...)
+}
+
 // https://docs.rustfs.com/en/developer/sdk/go
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
 func configureAwsS3v2(lgr *logger.Logger) (*client.S3Wrapper, error) {
@@ -286,7 +322,15 @@ func configureAwsS3v2(lgr *logger.Logger) (*client.S3Wrapper, error) {
 		}
 	})
 
-	presignClient := s3.NewPresignClient(s3client)
+	sgn := v4.NewSigner()
+
+	sgnwr := &uploadParamsFromContextPresigner{
+		delegate: sgn,
+	}
+
+	presignClient := s3.NewPresignClient(s3client, func(po *s3.PresignOptions) {
+		po.Presigner = sgnwr
+	})
 
 	return client.NewS3Wrapper(s3client, presignClient, lgr), nil
 }
