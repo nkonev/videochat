@@ -29,16 +29,18 @@ func (c *InternalMinioClient) FileExists(ctx context.Context, bucket, key string
 	return true, &objectInfo, err
 }
 
-func NewS3Wrapper(cl *s3.Client, lg *logger.Logger) *S3Wrapper {
+func NewS3Wrapper(cl *s3.Client, presignClient *s3.PresignClient, lg *logger.Logger) *S3Wrapper {
 	return &S3Wrapper{
-		Client: cl,
-		lgr:    lg,
+		Client:        cl,
+		PresignClient: presignClient,
+		lgr:           lg,
 	}
 }
 
 type S3Wrapper struct {
 	*s3.Client
-	lgr *logger.Logger
+	PresignClient *s3.PresignClient
+	lgr           *logger.Logger
 }
 
 func (c *S3Wrapper) FileExists(ctx context.Context, bucket, key string) (bool, *s3.HeadObjectOutput, error) {

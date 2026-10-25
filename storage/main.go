@@ -286,7 +286,9 @@ func configureAwsS3v2(lgr *logger.Logger) (*client.S3Wrapper, error) {
 		}
 	})
 
-	return client.NewS3Wrapper(s3client, lgr), nil
+	presignClient := s3.NewPresignClient(s3client)
+
+	return client.NewS3Wrapper(s3client, presignClient, lgr), nil
 }
 
 func configureTracer(lgr *logger.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
