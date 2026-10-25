@@ -15,7 +15,7 @@ import (
 	"github.com/siyouyun-open/imaging"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3client"
+	"nkonev.name/storage/client"
 	"nkonev.name/storage/utils"
 )
 
@@ -36,7 +36,7 @@ type abstractMethods interface {
 }
 
 type abstractAvatarHandler struct {
-	s3          *s3client.S3Wrapper
+	s3          *client.S3Wrapper
 	minioConfig *utils.MinioConfig
 	delegate    abstractMethods
 	lgr         *logger.Logger
@@ -165,7 +165,7 @@ type UserAvatarHandler struct {
 	abstractAvatarHandler
 }
 
-func NewUserAvatarHandler(lgr *logger.Logger, s3 *s3client.S3Wrapper, minioConfig *utils.MinioConfig) *UserAvatarHandler {
+func NewUserAvatarHandler(lgr *logger.Logger, s3 *client.S3Wrapper, minioConfig *utils.MinioConfig) *UserAvatarHandler {
 	uah := UserAvatarHandler{}
 	uah.s3 = s3
 	uah.delegate = &uah
@@ -197,7 +197,7 @@ type ChatAvatarHandler struct {
 	abstractAvatarHandler
 }
 
-func NewChatAvatarHandler(lgr *logger.Logger, s3 *s3client.S3Wrapper, minioConfig *utils.MinioConfig) *ChatAvatarHandler {
+func NewChatAvatarHandler(lgr *logger.Logger, s3 *client.S3Wrapper, minioConfig *utils.MinioConfig) *ChatAvatarHandler {
 	uah := ChatAvatarHandler{}
 	uah.s3 = s3
 	uah.delegate = &uah

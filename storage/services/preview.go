@@ -14,22 +14,22 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/siyouyun-open/imaging"
 	"github.com/spf13/viper"
+	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
-	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/utils"
 )
 
 type PreviewService struct {
-	minio                       *s3client.InternalMinioClient
+	minio                       *client.InternalMinioClient
 	minioConfig                 *utils.MinioConfig
 	rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher
 	filesService                *FilesService
 	lgr                         *logger.Logger
 }
 
-func NewPreviewService(lgr *logger.Logger, minio *s3client.InternalMinioClient, minioConfig *utils.MinioConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
+func NewPreviewService(lgr *logger.Logger, minio *client.InternalMinioClient, minioConfig *utils.MinioConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
 	return &PreviewService{
 		minio:                       minio,
 		minioConfig:                 minioConfig,

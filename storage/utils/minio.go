@@ -1,40 +1,12 @@
 package utils
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
 
-	"nkonev.name/storage/s3client"
-
-	"github.com/spf13/viper"
 	"nkonev.name/storage/dto"
 )
-
-func EnsureAndGetUserAvatarBucket(ctx context.Context, s3Client *s3client.S3Wrapper) (string, error) {
-	bucketName := viper.GetString("minio.bucket.userAvatar")
-	err := s3Client.EnsureBucket(ctx, bucketName)
-	return bucketName, err
-}
-
-func EnsureAndGetChatAvatarBucket(ctx context.Context, s3Client *s3client.S3Wrapper) (string, error) {
-	bucketName := viper.GetString("minio.bucket.chatAvatar")
-	err := s3Client.EnsureBucket(ctx, bucketName)
-	return bucketName, err
-}
-
-func EnsureAndGetFilesBucket(ctx context.Context, s3Client *s3client.S3Wrapper) (string, error) {
-	bucketName := viper.GetString("minio.bucket.files")
-	err := s3Client.EnsureBucket(ctx, bucketName)
-	return bucketName, err
-}
-
-func EnsureAndGetFilesPreviewBucket(ctx context.Context, s3Client *s3client.S3Wrapper) (string, error) {
-	bucketName := viper.GetString("minio.bucket.filesPreview")
-	err := s3Client.EnsureBucket(ctx, bucketName)
-	return bucketName, err
-}
 
 type MinioConfig struct {
 	UserAvatar, ChatAvatar, Files, FilesPreview string

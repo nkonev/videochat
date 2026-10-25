@@ -16,12 +16,11 @@ import (
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/utils"
 )
 
 type FilesService struct {
-	minio       *s3client.InternalMinioClient
+	minio       *client.InternalMinioClient
 	restClient  *client.RestClient
 	minioConfig *utils.MinioConfig
 	dba         *db.DB
@@ -30,7 +29,7 @@ type FilesService struct {
 
 func NewFilesService(
 	lgr *logger.Logger,
-	minio *s3client.InternalMinioClient,
+	minio *client.InternalMinioClient,
 	chatClient *client.RestClient,
 	dba *db.DB,
 	minioConfig *utils.MinioConfig,

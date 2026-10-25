@@ -10,11 +10,10 @@ import (
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
-	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/utils"
 )
 
-func NewEventService(lgr *logger.Logger, client *client.RestClient, minio *s3client.InternalMinioClient, minioConfig *utils.MinioConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
+func NewEventService(lgr *logger.Logger, client *client.RestClient, minio *client.InternalMinioClient, minioConfig *utils.MinioConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
 	return &EventService{
 		client:       client,
 		minio:        minio,
@@ -27,7 +26,7 @@ func NewEventService(lgr *logger.Logger, client *client.RestClient, minio *s3cli
 
 type EventService struct {
 	client       *client.RestClient
-	minio        *s3client.InternalMinioClient
+	minio        *client.InternalMinioClient
 	minioConfig  *utils.MinioConfig
 	filesService *FilesService
 	publisher    *producer.RabbitFileUploadedPublisher
