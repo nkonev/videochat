@@ -6,60 +6,70 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/minio/minio-go/v7"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	s3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/smithy-go"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3"
 )
 
-func ensureBucket(lgr *logger.Logger, minioClient *s3.InternalMinioClient, bucketName, location string) error {
-	// Check to see if we already own this bucket (which happens if you run this twice)
-	exists, err := minioClient.BucketExists(context.Background(), bucketName)
-	if err == nil && exists {
-		lgr.Infof("Bucket '%s' already present", bucketName)
-		return nil
-	} else if err != nil {
-		return err
-	} else {
-		if err := minioClient.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{
-			Region:        location,
-			ObjectLocking: false,
-		}); err != nil {
-			lgr.Errorf("Error during creating bucket '%s'", bucketName)
-			return err
-		} else {
-			lgr.Infof("Successfully created bucket '%s'", bucketName)
-			return nil
+func ensureBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client, bucketName string) error {
+	_, err := s3Client.HeadBucket(ctx, &s3.HeadBucketInput{
+		Bucket: aws.String(bucketName),
+	})
+
+	exists := true
+	if err != nil {
+		var apiError smithy.APIError
+		if errors.As(err, &apiError) {
+			switch apiError.(type) {
+			case *types.NotFound:
+				exists = false
+				err = nil
+			}
 		}
 	}
+
+	if exists {
+		lgr.Infof("Bucket '%s' already present", bucketName)
+		return nil
+	}
+
+	_, err = s3Client.CreateBucket(ctx, &s3.CreateBucketInput{
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		lgr.Errorf("Error during creating bucket '%s'", bucketName)
+		return err
+	}
+
+	lgr.Infof("Successfully created bucket '%s'", bucketName)
+	return nil
 }
 
-func EnsureAndGetUserAvatarBucket(lgr *logger.Logger, minioClient *s3.InternalMinioClient) (string, error) {
+func EnsureAndGetUserAvatarBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client) (string, error) {
 	bucketName := viper.GetString("minio.bucket.userAvatar")
-	bucketLocation := viper.GetString("minio.location")
-	err := ensureBucket(lgr, minioClient, bucketName, bucketLocation)
+	err := ensureBucket(ctx, lgr, s3Client, bucketName)
 	return bucketName, err
 }
 
-func EnsureAndGetChatAvatarBucket(lgr *logger.Logger, minioClient *s3.InternalMinioClient) (string, error) {
+func EnsureAndGetChatAvatarBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client) (string, error) {
 	bucketName := viper.GetString("minio.bucket.chatAvatar")
-	bucketLocation := viper.GetString("minio.location")
-	err := ensureBucket(lgr, minioClient, bucketName, bucketLocation)
+	err := ensureBucket(ctx, lgr, s3Client, bucketName)
 	return bucketName, err
 }
 
-func EnsureAndGetFilesBucket(lgr *logger.Logger, minioClient *s3.InternalMinioClient) (string, error) {
+func EnsureAndGetFilesBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client) (string, error) {
 	bucketName := viper.GetString("minio.bucket.files")
-	bucketLocation := viper.GetString("minio.location")
-	err := ensureBucket(lgr, minioClient, bucketName, bucketLocation)
+	err := ensureBucket(ctx, lgr, s3Client, bucketName)
 	return bucketName, err
 }
 
-func EnsureAndGetFilesPreviewBucket(lgr *logger.Logger, minioClient *s3.InternalMinioClient) (string, error) {
+func EnsureAndGetFilesPreviewBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client) (string, error) {
 	bucketName := viper.GetString("minio.bucket.filesPreview")
-	bucketLocation := viper.GetString("minio.location")
-	err := ensureBucket(lgr, minioClient, bucketName, bucketLocation)
+	err := ensureBucket(ctx, lgr, s3Client, bucketName)
 	return bucketName, err
 }
 
