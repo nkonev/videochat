@@ -37,7 +37,6 @@ import (
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
 	"nkonev.name/storage/rabbitmq"
-	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/tasks"
 	"nkonev.name/storage/utils"
@@ -78,7 +77,7 @@ func main() {
 			handlers.NewUserAvatarHandler,
 			handlers.NewChatAvatarHandler,
 			handlers.NewFilesHandler,
-			listener.CreateMinioEventsListener,
+			listener.CreateS3EventListener,
 			producer.NewRabbitFileUploadedPublisher,
 			rabbitmq.CreateRabbitMqConnection,
 			services.NewFilesService,
@@ -241,7 +240,7 @@ func configureEcho(
 	return e
 }
 
-func configureInternalMinio() (*s3client.InternalMinioClient, error) {
+func configureInternalMinio() (*client.InternalMinioClient, error) {
 	endpoint := viper.GetString("minio.internalEndpointMinio")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
@@ -258,12 +257,12 @@ func configureInternalMinio() (*s3client.InternalMinioClient, error) {
 		return nil, err
 	}
 
-	return &s3client.InternalMinioClient{minioClient}, nil
+	return &client.InternalMinioClient{minioClient}, nil
 }
 
 // https://docs.rustfs.com/en/developer/sdk/go
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
-func configureAwsS3v2(lgr *logger.Logger) (*s3client.S3Wrapper, error) {
+func configureAwsS3v2(lgr *logger.Logger) (*client.S3Wrapper, error) {
 	endpoint := viper.GetString("minio.internalEndpoint")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
@@ -277,7 +276,7 @@ func configureAwsS3v2(lgr *logger.Logger) (*s3client.S3Wrapper, error) {
 	}
 
 	// build S3 client
-	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+	s3client := s3.NewFromConfig(cfg, func(o *s3.Options) {
 		o.BaseEndpoint = &endpoint
 		// RustFS uses path-style URLs by default; virtual-host style requires RUSTFS_SERVER_DOMAINS
 		o.UsePathStyle = true
@@ -287,7 +286,7 @@ func configureAwsS3v2(lgr *logger.Logger) (*s3client.S3Wrapper, error) {
 		}
 	})
 
-	return s3client.NewS3Wrapper(client, lgr), nil
+	return client.NewS3Wrapper(s3client, lgr), nil
 }
 
 func configureTracer(lgr *logger.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
@@ -350,21 +349,45 @@ func runEcho(lgr *logger.Logger, e *echo.Echo) {
 	lgr.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func configureMinioEntities(lgr *logger.Logger, s3Client *s3client.S3Wrapper) (*utils.MinioConfig, error) {
+func ensureAndGetUserAvatarBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
+	bucketName := viper.GetString("minio.bucket.userAvatar")
+	err := s3Client.EnsureBucket(ctx, bucketName)
+	return bucketName, err
+}
+
+func ensureAndGetChatAvatarBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
+	bucketName := viper.GetString("minio.bucket.chatAvatar")
+	err := s3Client.EnsureBucket(ctx, bucketName)
+	return bucketName, err
+}
+
+func ensureAndGetFilesBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
+	bucketName := viper.GetString("minio.bucket.files")
+	err := s3Client.EnsureBucket(ctx, bucketName)
+	return bucketName, err
+}
+
+func ensureAndGetFilesPreviewBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
+	bucketName := viper.GetString("minio.bucket.filesPreview")
+	err := s3Client.EnsureBucket(ctx, bucketName)
+	return bucketName, err
+}
+
+func configureMinioEntities(lgr *logger.Logger, s3Client *client.S3Wrapper) (*utils.MinioConfig, error) {
 	var ua, ca, f, p string
 	var err error
 
 	ctx := context.Background()
-	if ua, err = utils.EnsureAndGetUserAvatarBucket(ctx, s3Client); err != nil {
+	if ua, err = ensureAndGetUserAvatarBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
-	if ca, err = utils.EnsureAndGetChatAvatarBucket(ctx, s3Client); err != nil {
+	if ca, err = ensureAndGetChatAvatarBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
-	if f, err = utils.EnsureAndGetFilesBucket(ctx, s3Client); err != nil {
+	if f, err = ensureAndGetFilesBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
-	if p, err = utils.EnsureAndGetFilesPreviewBucket(ctx, s3Client); err != nil {
+	if p, err = ensureAndGetFilesPreviewBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
 

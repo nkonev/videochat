@@ -13,7 +13,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/utils"
 )
 
@@ -41,7 +40,7 @@ func CleanFilesOfDeletedChatScheduler(
 }
 
 type CleanFilesOfDeletedChatService struct {
-	minioClient        *s3client.InternalMinioClient
+	minioClient        *client.InternalMinioClient
 	minioBucketsConfig *utils.MinioConfig
 	chatClient         *client.RestClient
 	tracer             trace.Tracer
@@ -138,7 +137,7 @@ func (srv *CleanFilesOfDeletedChatService) processBatch(c context.Context, chatI
 	}
 }
 
-func NewCleanFilesOfDeletedChatService(lgr *logger.Logger, minioClient *s3client.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {
+func NewCleanFilesOfDeletedChatService(lgr *logger.Logger, minioClient *client.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {
 	trcr := otel.Tracer("scheduler/clean-files-of-deleted-chat")
 	return &CleanFilesOfDeletedChatService{
 		lgr:                lgr,
