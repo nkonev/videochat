@@ -6,67 +6,33 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"nkonev.name/storage/s3client"
 
 	"github.com/spf13/viper"
 	"nkonev.name/storage/dto"
-	"nkonev.name/storage/logger"
 )
 
-func ensureBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper, bucketName string) error {
-	// https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/go_s3_code_examples.html HeadBucket
-	_, err := s3Client.HeadBucket(ctx, &s3.HeadBucketInput{
-		Bucket: aws.String(bucketName),
-	})
-
-	exists := true
-	if s3client.IsS3NotFoundError(err) {
-		exists = false
-		err = nil
-	} else if err != nil {
-		return err
-	}
-
-	if exists {
-		lgr.Infof("Bucket '%s' already present", bucketName)
-		return nil
-	}
-
-	_, err = s3Client.CreateBucket(ctx, &s3.CreateBucketInput{
-		Bucket: aws.String(bucketName),
-	})
-	if err != nil {
-		lgr.Errorf("Error during creating bucket '%s'", bucketName)
-		return err
-	}
-
-	lgr.Infof("Successfully created bucket '%s'", bucketName)
-	return nil
-}
-
-func EnsureAndGetUserAvatarBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper) (string, error) {
+func EnsureAndGetUserAvatarBucket(ctx context.Context, s3Client *s3client.S3Wrapper) (string, error) {
 	bucketName := viper.GetString("minio.bucket.userAvatar")
-	err := ensureBucket(ctx, lgr, s3Client, bucketName)
+	err := s3Client.EnsureBucket(ctx, bucketName)
 	return bucketName, err
 }
 
-func EnsureAndGetChatAvatarBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper) (string, error) {
+func EnsureAndGetChatAvatarBucket(ctx context.Context, s3Client *s3client.S3Wrapper) (string, error) {
 	bucketName := viper.GetString("minio.bucket.chatAvatar")
-	err := ensureBucket(ctx, lgr, s3Client, bucketName)
+	err := s3Client.EnsureBucket(ctx, bucketName)
 	return bucketName, err
 }
 
-func EnsureAndGetFilesBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper) (string, error) {
+func EnsureAndGetFilesBucket(ctx context.Context, s3Client *s3client.S3Wrapper) (string, error) {
 	bucketName := viper.GetString("minio.bucket.files")
-	err := ensureBucket(ctx, lgr, s3Client, bucketName)
+	err := s3Client.EnsureBucket(ctx, bucketName)
 	return bucketName, err
 }
 
-func EnsureAndGetFilesPreviewBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper) (string, error) {
+func EnsureAndGetFilesPreviewBucket(ctx context.Context, s3Client *s3client.S3Wrapper) (string, error) {
 	bucketName := viper.GetString("minio.bucket.filesPreview")
-	err := ensureBucket(ctx, lgr, s3Client, bucketName)
+	err := s3Client.EnsureBucket(ctx, bucketName)
 	return bucketName, err
 }
 
