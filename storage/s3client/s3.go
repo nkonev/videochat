@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
 	"github.com/minio/minio-go/v7"
@@ -28,11 +28,11 @@ func (c *InternalMinioClient) FileExists(ctx context.Context, bucket, key string
 }
 
 type S3Wrapper struct {
-	*s3v2.Client
+	*s3.Client
 }
 
-func (c *S3Wrapper) FileExists(ctx context.Context, bucket, key string) (bool, *s3v2.HeadObjectOutput, error) {
-	objectInfo, err := c.Client.HeadObject(ctx, &s3v2.HeadObjectInput{
+func (c *S3Wrapper) FileExists(ctx context.Context, bucket, key string) (bool, *s3.HeadObjectOutput, error) {
+	objectInfo, err := c.Client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
 	})
