@@ -48,7 +48,7 @@ func (c *S3Wrapper) FileExists(ctx context.Context, bucket, key string) (bool, *
 	})
 
 	if err != nil {
-		if IsS3NotFoundError(err) {
+		if isS3NotFoundError(err) {
 			return false, nil, nil
 		}
 		return false, nil, err
@@ -56,10 +56,9 @@ func (c *S3Wrapper) FileExists(ctx context.Context, bucket, key string) (bool, *
 	return true, objectInfo, err
 }
 
-func IsS3NotFoundError(err error) bool {
+func isS3NotFoundError(err error) bool {
 	if err != nil {
-		var apiError smithy.APIError
-		if errors.As(err, &apiError) {
+		if apiError, ok := errors.AsType[smithy.APIError](err); ok {
 			switch apiError.(type) {
 			case *types.NotFound:
 				return true
@@ -77,7 +76,7 @@ func (c *S3Wrapper) EnsureBucket(ctx context.Context, bucketName string) error {
 	})
 
 	exists := true
-	if IsS3NotFoundError(err) {
+	if isS3NotFoundError(err) {
 		exists = false
 		err = nil
 	} else if err != nil {
