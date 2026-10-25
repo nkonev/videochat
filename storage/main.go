@@ -291,32 +291,7 @@ func configureAwsS3() *awsS3.S3 {
 	return svc
 }
 
-// type resolver struct {
-// 	endpoint string
-// 	location string
-// }
-
-// func NewResolver(endpoint string,
-// 	location string,
-// ) *resolver {
-// 	return &resolver{
-// 		endpoint: endpoint,
-// 		location: location,
-// 	}
-// }
-
-// func (r *resolver) ResolveEndpoint(region string, options s3v2.EndpointResolverOptions) (awsv2.Endpoint, error) {
-// 	// u := *r.URL
-// 	// u.Path += "/" + *params.Bucket
-// 	// return transport.Endpoint{URI: u}, nil
-// 	return awsv2.Endpoint{
-// 		PartitionID:       "aws",
-// 		URL:               r.endpoint, // or where ever you ran minio
-// 		SigningRegion:     r.location,
-// 		HostnameImmutable: true,
-// 	}, nil
-// }
-
+// https://docs.rustfs.com/en/developer/sdk/go
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
 func configureAwsS3v2() (*s3v2.Client, error) {
 	endpoint := viper.GetString("minio.internalEndpointv2")
@@ -331,15 +306,6 @@ func configureAwsS3v2() (*s3v2.Client, error) {
 		Credentials: awsv2.NewCredentialsCache(awsCredentialsv2.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, "")),
 	}
 
-	// staticResolver := awsv2.EndpointResolverFunc(func(service, region string) (awsv2.Endpoint, error) {
-	// 	return awsv2.Endpoint{
-	// 		PartitionID:       "aws",
-	// 		URL:               endpoint, // or where ever you ran minio
-	// 		SigningRegion:     location,
-	// 		HostnameImmutable: true,
-	// 	}, nil
-	// })
-
 	// build S3 client
 	client := s3v2.NewFromConfig(cfg, func(o *s3v2.Options) {
 		o.BaseEndpoint = &endpoint
@@ -349,12 +315,6 @@ func configureAwsS3v2() (*s3v2.Client, error) {
 		if !secured {
 			o.EndpointOptions.DisableHTTPS = true
 		}
-
-		// https://github.com/aws/aws-sdk-go-v2/issues/1108#issuecomment-790004264
-		// o.APIOptions = append(o.APIOptions, v4.AddUnsignedPayloadMiddleware, v4.RemoveComputePayloadSHA256Middleware)
-
-		// https://github.com/aws/aws-sdk-go-v2/issues/1108#issuecomment-2776333826
-		// o.APIOptions = append(o.APIOptions, v4.RemoveComputePayloadSHA256Middleware)
 	})
 
 	return client, nil
@@ -420,25 +380,25 @@ func runEcho(lgr *logger.Logger, e *echo.Echo) {
 	lgr.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func configureMinioEntities(lgr *logger.Logger, s3Clientv2 *s3v2.Client) (*utils.MinioConfig, error) {
+func configureMinioEntities(lgr *logger.Logger, s3Client *s3v2.Client) (*utils.MinioConfig, error) {
 	var ua, ca, f, p string
 	var err error
 
 	ctx := context.Background()
-	if ua, err = utils.EnsureAndGetUserAvatarBucket(ctx, lgr, s3Clientv2); err != nil {
+	if ua, err = utils.EnsureAndGetUserAvatarBucket(ctx, lgr, s3Client); err != nil {
 		return nil, err
 	}
-	if ca, err = utils.EnsureAndGetChatAvatarBucket(ctx, lgr, s3Clientv2); err != nil {
+	if ca, err = utils.EnsureAndGetChatAvatarBucket(ctx, lgr, s3Client); err != nil {
 		return nil, err
 	}
-	if f, err = utils.EnsureAndGetFilesBucket(ctx, lgr, s3Clientv2); err != nil {
+	if f, err = utils.EnsureAndGetFilesBucket(ctx, lgr, s3Client); err != nil {
 		return nil, err
 	}
-	if p, err = utils.EnsureAndGetFilesPreviewBucket(ctx, lgr, s3Clientv2); err != nil {
+	if p, err = utils.EnsureAndGetFilesPreviewBucket(ctx, lgr, s3Client); err != nil {
 		return nil, err
 	}
 
-	bucketNotification, err := s3Clientv2.GetBucketNotificationConfiguration(ctx, &s3v2.GetBucketNotificationConfigurationInput{
+	bucketNotification, err := s3Client.GetBucketNotificationConfiguration(ctx, &s3v2.GetBucketNotificationConfigurationInput{
 		Bucket: &f,
 	})
 	if err != nil {
@@ -462,7 +422,7 @@ func configureMinioEntities(lgr *logger.Logger, s3Clientv2 *s3v2.Client) (*utils
 
 		bucketName := viper.GetString("minio.bucket.files")
 
-		output, err := s3Clientv2.PutBucketNotificationConfiguration(ctx, &s3v2.PutBucketNotificationConfigurationInput{
+		output, err := s3Client.PutBucketNotificationConfiguration(ctx, &s3v2.PutBucketNotificationConfigurationInput{
 			Bucket: new(bucketName),
 			NotificationConfiguration: &types.NotificationConfiguration{
 				QueueConfigurations: []types.QueueConfiguration{
