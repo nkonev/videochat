@@ -128,7 +128,8 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	})
 	for previewOjInfo := range previewObjects {
 		srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v'", previewOjInfo.Key)
-		originalKey, err := services.GetOriginalKeyFromMetadata(previewOjInfo.UserMetadata, true)
+		// TODO rustfs check is originalKey ok
+		originalKey, err := services.GetOriginalKeyFromMetadata(previewOjInfo.UserMetadata)
 		if err != nil {
 			srv.lgr.WithTracing(c).Debugf("There is no original key, it's an old entry, skipping")
 			continue
