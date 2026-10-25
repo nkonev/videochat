@@ -208,15 +208,31 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	presignedUrls := []PresignedUrl{}
 	for i := 1; i <= chunksNum; i++ {
-		var urlVals = url.Values{}
-		urlVals.Set("partNumber", utils.IntToString(i))
-		urlVals.Set("uploadId", *upload.UploadId)
+		// var urlVals = url.Values{}
+		// urlVals.Set("partNumber", utils.IntToString(i))
+		// urlVals.Set("uploadId", *upload.UploadId)
 
-		presUrl, err := h.awsS3.PresignClient.PresignPutObject(c.Request().Context(), &s3.PutObjectInput{
-			Bucket:  &bucketName,
-			Key:     &aKey,
-			Tagging: new(urlVals.Encode()),
-		}, s3.WithPresignExpires(uploadDuration))
+		// mm := map[string]string{
+		// 	"partNumber": utils.IntToString(i),
+		// 	"uploadId":   *upload.UploadId,
+		// }
+
+		ctx := c.Request().Context()
+		ctx = context.WithValue(ctx, dto.CtxKeyPartNumber, utils.IntToString(i))
+		ctx = context.WithValue(ctx, dto.CtxKeyUpploadId, *upload.UploadId)
+
+		presUrl, err := h.awsS3.PresignClient.PresignPutObject(ctx, &s3.PutObjectInput{
+			Bucket: &bucketName,
+			Key:    &aKey,
+			// Metadata: mm,
+		}, s3.WithPresignExpires(uploadDuration),
+		//s3.WithPresignClientFromClientOptions(),
+		// func(po *s3.PresignOptions) {
+		// 	po.ClientOptions = append(po.ClientOptions, func(o *s3.Options) {
+		// 		o.HTTPSignerV4.SignHTTP()
+		// 	})
+		// },
+		)
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting presigned put url %v", err)
 			return err
