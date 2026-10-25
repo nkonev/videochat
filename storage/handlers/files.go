@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -188,7 +188,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	expire := viper.GetDuration("minio.multipart.expire")
 	expTime := time.Now().UTC().Add(expire)
-	mpu := s3v2.CreateMultipartUploadInput{
+	mpu := s3.CreateMultipartUploadInput{
 		Expires:  &expTime,
 		Bucket:   &bucketName,
 		Key:      &aKey,
@@ -281,7 +281,7 @@ func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
 		})
 	}
 
-	input := s3v2.CompleteMultipartUploadInput{
+	input := s3.CompleteMultipartUploadInput{
 		Key:      &reqDto.Key,
 		Bucket:   &bucketName,
 		UploadId: &reqDto.UploadId,

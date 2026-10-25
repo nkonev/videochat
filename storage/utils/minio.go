@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"nkonev.name/storage/s3client"
 
 	"github.com/spf13/viper"
@@ -17,7 +17,7 @@ import (
 
 func ensureBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper, bucketName string) error {
 	// https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/go_s3_code_examples.html HeadBucket
-	_, err := s3Client.HeadBucket(ctx, &s3v2.HeadBucketInput{
+	_, err := s3Client.HeadBucket(ctx, &s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
 	})
 
@@ -34,7 +34,7 @@ func ensureBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3
 		return nil
 	}
 
-	_, err = s3Client.CreateBucket(ctx, &s3v2.CreateBucketInput{
+	_, err = s3Client.CreateBucket(ctx, &s3.CreateBucketInput{
 		Bucket: aws.String(bucketName),
 	})
 	if err != nil {
