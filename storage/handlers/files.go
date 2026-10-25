@@ -214,17 +214,16 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		ctx = dto.ContextWithUpploadId(ctx, *upload.UploadId)
 		ctx = dto.ContextWithPartNumber(ctx, utils.IntToString(i))
 
-		presUrl, err := h.awsS3.PresignClient.PresignPutObject(ctx, &s3.PutObjectInput{
+		presReq, err := h.awsS3.PresignClient.PresignPutObject(ctx, &s3.PutObjectInput{
 			Bucket: &bucketName,
 			Key:    &aKey,
-		}, s3.WithPresignExpires(uploadDuration),
-		)
+		}, s3.WithPresignExpires(uploadDuration))
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting presigned put url %v", err)
 			return err
 		}
 
-		u, err := url.Parse(presUrl.URL)
+		u, err := url.Parse(presReq.URL)
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing presigned put url %v", err)
 			return err
