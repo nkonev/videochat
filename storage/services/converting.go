@@ -4,28 +4,29 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/minio/minio-go/v7"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/url"
-	"nkonev.name/storage/dto"
-	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3"
-	"nkonev.name/storage/utils"
 	"os"
 	"os/exec"
 	"syscall"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/spf13/viper"
+	"nkonev.name/storage/dto"
+	"nkonev.name/storage/logger"
+	"nkonev.name/storage/s3client"
+	"nkonev.name/storage/utils"
 )
 
 type ConvertingService struct {
-	minio            *s3.InternalMinioClient
+	minio            *s3client.InternalMinioClient
 	minioConfig      *utils.MinioConfig
 	tempDirPrefix    string
 	redisInfoService *RedisInfoService
 	lgr              *logger.Logger
 }
 
-func NewConvertingService(lgr *logger.Logger, minio *s3.InternalMinioClient, minioConfig *utils.MinioConfig, redisInfoService *RedisInfoService) *ConvertingService {
+func NewConvertingService(lgr *logger.Logger, minio *s3client.InternalMinioClient, minioConfig *utils.MinioConfig, redisInfoService *RedisInfoService) *ConvertingService {
 	tempDirPrefix := viper.GetString("converting.tempDir")
 	lgr.Infof("Ensuring temp root dir for the converting videos using ffmpeg: %v", tempDirPrefix)
 	os.MkdirAll(tempDirPrefix, os.ModePerm)

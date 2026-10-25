@@ -11,7 +11,7 @@ import (
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3"
+	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
@@ -24,7 +24,7 @@ func CreateMinioEventsListener(
 	eventService *services.EventService,
 	client *client.RestClient,
 	minioConfig *utils.MinioConfig,
-	minioClient *s3.InternalMinioClient,
+	minioClient *s3client.InternalMinioClient,
 	convertingService *services.ConvertingService,
 	dba *db.DB,
 ) MinioEventsListener {
@@ -129,7 +129,7 @@ func isEventForConvertingService(eventType dto.EventType, minioEvent *dto.MinioE
 		!previewExists // prevents the indefinite converting
 }
 
-func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig *utils.MinioConfig, minioClient *s3.InternalMinioClient, normalizedKey string) (bool, error) {
+func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig *utils.MinioConfig, minioClient *s3client.InternalMinioClient, normalizedKey string) (bool, error) {
 	previewKey := utils.SetVideoPreviewExtension(normalizedKey)
 	exists, _, err := minioClient.FileExists(ctx, minioConfig.FilesPreview, previewKey)
 	if err != nil {

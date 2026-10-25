@@ -7,29 +7,26 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	s3 "github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/smithy-go"
+	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"nkonev.name/storage/s3client"
+
 	"github.com/spf13/viper"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 )
 
-func ensureBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client, bucketName string) error {
-	_, err := s3Client.HeadBucket(ctx, &s3.HeadBucketInput{
+func ensureBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper, bucketName string) error {
+	// https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/go_s3_code_examples.html HeadBucket
+	_, err := s3Client.HeadBucket(ctx, &s3v2.HeadBucketInput{
 		Bucket: aws.String(bucketName),
 	})
 
 	exists := true
-	if err != nil {
-		var apiError smithy.APIError
-		if errors.As(err, &apiError) {
-			switch apiError.(type) {
-			case *types.NotFound:
-				exists = false
-				err = nil
-			}
-		}
+	if s3client.IsS3NotFoundError(err) {
+		exists = false
+		err = nil
+	} else if err != nil {
+		return err
 	}
 
 	if exists {
@@ -37,7 +34,7 @@ func ensureBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client, 
 		return nil
 	}
 
-	_, err = s3Client.CreateBucket(ctx, &s3.CreateBucketInput{
+	_, err = s3Client.CreateBucket(ctx, &s3v2.CreateBucketInput{
 		Bucket: aws.String(bucketName),
 	})
 	if err != nil {
@@ -49,25 +46,25 @@ func ensureBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client, 
 	return nil
 }
 
-func EnsureAndGetUserAvatarBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client) (string, error) {
+func EnsureAndGetUserAvatarBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper) (string, error) {
 	bucketName := viper.GetString("minio.bucket.userAvatar")
 	err := ensureBucket(ctx, lgr, s3Client, bucketName)
 	return bucketName, err
 }
 
-func EnsureAndGetChatAvatarBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client) (string, error) {
+func EnsureAndGetChatAvatarBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper) (string, error) {
 	bucketName := viper.GetString("minio.bucket.chatAvatar")
 	err := ensureBucket(ctx, lgr, s3Client, bucketName)
 	return bucketName, err
 }
 
-func EnsureAndGetFilesBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client) (string, error) {
+func EnsureAndGetFilesBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper) (string, error) {
 	bucketName := viper.GetString("minio.bucket.files")
 	err := ensureBucket(ctx, lgr, s3Client, bucketName)
 	return bucketName, err
 }
 
-func EnsureAndGetFilesPreviewBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3.Client) (string, error) {
+func EnsureAndGetFilesPreviewBucket(ctx context.Context, lgr *logger.Logger, s3Client *s3client.S3Wrapper) (string, error) {
 	bucketName := viper.GetString("minio.bucket.filesPreview")
 	err := ensureBucket(ctx, lgr, s3Client, bucketName)
 	return bucketName, err
