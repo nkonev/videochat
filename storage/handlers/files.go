@@ -10,7 +10,8 @@ import (
 	"strings"
 	"time"
 
-	awsS3 "github.com/aws/aws-sdk-go/service/s3"
+	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
@@ -31,7 +32,7 @@ const headerCorrelationId = "X-CorrelationId"
 
 type FilesHandler struct {
 	minio            *s3.InternalMinioClient
-	awsS3            *awsS3.S3
+	awsS3            *s3v2.Client
 	restClient       *client.RestClient
 	minioConfig      *utils.MinioConfig
 	filesService     *services.FilesService
@@ -51,7 +52,7 @@ const ConvertingImage = "/images/covers/ffmpeg_converting.jpg"
 func NewFilesHandler(
 	lgr *logger.Logger,
 	minio *s3.InternalMinioClient,
-	awsS3 *awsS3.S3,
+	awsS3 *s3v2.Client,
 	restClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
 	filesService *services.FilesService,
@@ -102,7 +103,7 @@ type FinishMultipartRequest struct {
 
 type MultipartFinishingPart struct {
 	Etag       string `json:"etag"`
-	PartNumber int64  `json:"partNumber"`
+	PartNumber int32  `json:"partNumber"`
 }
 
 func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
@@ -187,14 +188,13 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	expire := viper.GetDuration("minio.multipart.expire")
 	expTime := time.Now().UTC().Add(expire)
-	converted := convertMetadata(&metadata)
-	mpu := awsS3.CreateMultipartUploadInput{
+	mpu := s3v2.CreateMultipartUploadInput{
 		Expires:  &expTime,
 		Bucket:   &bucketName,
 		Key:      &aKey,
-		Metadata: converted,
+		Metadata: metadata,
 	}
-	upload, err := h.awsS3.CreateMultipartUpload(&mpu)
+	upload, err := h.awsS3.CreateMultipartUpload(c.Request().Context(), &mpu)
 	if err != nil {
 		return err
 	}
@@ -249,16 +249,6 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	})
 }
 
-func convertMetadata(urlValues *map[string]string) map[string]*string {
-	res := map[string]*string{}
-	for k, v := range *urlValues {
-		kk := k
-		vv := v
-		res[kk] = &vv
-	}
-	return res
-}
-
 func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -282,25 +272,24 @@ func (h *FilesHandler) FinishMultipartUpload(c echo.Context) error {
 		return err
 	}
 
-	arr := []*awsS3.CompletedPart{}
+	arr := []types.CompletedPart{}
 
 	for _, part := range reqDto.Parts {
-		part := part
-		arr = append(arr, &awsS3.CompletedPart{
+		arr = append(arr, types.CompletedPart{
 			ETag:       &part.Etag,
 			PartNumber: &part.PartNumber,
 		})
 	}
 
-	input := awsS3.CompleteMultipartUploadInput{
+	input := s3v2.CompleteMultipartUploadInput{
 		Key:      &reqDto.Key,
 		Bucket:   &bucketName,
 		UploadId: &reqDto.UploadId,
-		MultipartUpload: &awsS3.CompletedMultipartUpload{
+		MultipartUpload: &types.CompletedMultipartUpload{
 			Parts: arr,
 		},
 	}
-	_, err = h.awsS3.CompleteMultipartUpload(&input)
+	_, err = h.awsS3.CompleteMultipartUpload(c.Request().Context(), &input)
 	if err != nil {
 		return err
 	}
