@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3"
+	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
@@ -41,7 +41,7 @@ func ActualizeGeneratedFilesScheduler(
 }
 
 type ActualizeGeneratedFilesService struct {
-	minioClient        *s3.InternalMinioClient
+	minioClient        *s3client.InternalMinioClient
 	minioBucketsConfig *utils.MinioConfig
 	previewService     *services.PreviewService
 	tracer             trace.Tracer
@@ -160,7 +160,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	srv.lgr.WithTracing(c).Infof("End of generated files job")
 }
 
-func NewActualizeGeneratedFilesService(lgr *logger.Logger, minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {
+func NewActualizeGeneratedFilesService(lgr *logger.Logger, minioClient *s3client.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {
 	trcr := otel.Tracer("scheduler/actualize-generated-files")
 	return &ActualizeGeneratedFilesService{
 		lgr:                lgr,

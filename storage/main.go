@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
-	awsCredentialsv2 "github.com/aws/aws-sdk-go-v2/credentials"
-	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
+	minioCredentials "github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -37,7 +37,7 @@ import (
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
 	"nkonev.name/storage/rabbitmq"
-	"nkonev.name/storage/s3"
+	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/tasks"
 	"nkonev.name/storage/utils"
@@ -241,7 +241,7 @@ func configureEcho(
 	return e
 }
 
-func configureInternalMinio() (*s3.InternalMinioClient, error) {
+func configureInternalMinio() (*s3client.InternalMinioClient, error) {
 	endpoint := viper.GetString("minio.internalEndpointMinio")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
@@ -250,7 +250,7 @@ func configureInternalMinio() (*s3.InternalMinioClient, error) {
 
 	// Initialize minio client object.
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Creds:  minioCredentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
 		Secure: secured,
 		Region: location,
 	})
@@ -258,12 +258,12 @@ func configureInternalMinio() (*s3.InternalMinioClient, error) {
 		return nil, err
 	}
 
-	return &s3.InternalMinioClient{minioClient}, nil
+	return &s3client.InternalMinioClient{minioClient}, nil
 }
 
 // https://docs.rustfs.com/en/developer/sdk/go
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
-func configureAwsS3v2() (*s3v2.Client, error) {
+func configureAwsS3v2() (*s3client.S3Wrapper, error) {
 	endpoint := viper.GetString("minio.internalEndpoint")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
@@ -271,13 +271,13 @@ func configureAwsS3v2() (*s3v2.Client, error) {
 	secured := viper.GetBool("minio.secured")
 
 	// build aws.Config
-	cfg := awsv2.Config{
+	cfg := aws.Config{
 		Region:      location,
-		Credentials: awsv2.NewCredentialsCache(awsCredentialsv2.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, "")),
+		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, "")),
 	}
 
 	// build S3 client
-	client := s3v2.NewFromConfig(cfg, func(o *s3v2.Options) {
+	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
 		o.BaseEndpoint = &endpoint
 		// RustFS uses path-style URLs by default; virtual-host style requires RUSTFS_SERVER_DOMAINS
 		o.UsePathStyle = true
@@ -287,7 +287,7 @@ func configureAwsS3v2() (*s3v2.Client, error) {
 		}
 	})
 
-	return client, nil
+	return &s3client.S3Wrapper{client}, nil
 }
 
 func configureTracer(lgr *logger.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
@@ -350,7 +350,7 @@ func runEcho(lgr *logger.Logger, e *echo.Echo) {
 	lgr.Info("Server started. Waiting for interrupt signal 2 (Ctrl+C)")
 }
 
-func configureMinioEntities(lgr *logger.Logger, s3Client *s3v2.Client) (*utils.MinioConfig, error) {
+func configureMinioEntities(lgr *logger.Logger, s3Client *s3client.S3Wrapper) (*utils.MinioConfig, error) {
 	var ua, ca, f, p string
 	var err error
 
@@ -368,7 +368,7 @@ func configureMinioEntities(lgr *logger.Logger, s3Client *s3v2.Client) (*utils.M
 		return nil, err
 	}
 
-	bucketNotification, err := s3Client.GetBucketNotificationConfiguration(ctx, &s3v2.GetBucketNotificationConfigurationInput{
+	bucketNotification, err := s3Client.GetBucketNotificationConfiguration(ctx, &s3.GetBucketNotificationConfigurationInput{
 		Bucket: &f,
 	})
 	if err != nil {
@@ -392,7 +392,7 @@ func configureMinioEntities(lgr *logger.Logger, s3Client *s3v2.Client) (*utils.M
 
 		bucketName := viper.GetString("minio.bucket.files")
 
-		output, err := s3Client.PutBucketNotificationConfiguration(ctx, &s3v2.PutBucketNotificationConfigurationInput{
+		output, err := s3Client.PutBucketNotificationConfiguration(ctx, &s3.PutBucketNotificationConfigurationInput{
 			Bucket: new(bucketName),
 			NotificationConfiguration: &types.NotificationConfiguration{
 				QueueConfigurations: []types.QueueConfiguration{

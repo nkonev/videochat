@@ -13,7 +13,7 @@ import (
 	"nkonev.name/storage/db"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
-	"nkonev.name/storage/s3"
+	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
@@ -42,7 +42,7 @@ func ActualizeMetadataCacheScheduler(
 }
 
 type ActualizeMetadataCacheService struct {
-	minioClient        *s3.InternalMinioClient
+	minioClient        *s3client.InternalMinioClient
 	minioBucketsConfig *utils.MinioConfig
 	dba                *db.DB
 	tracer             trace.Tracer
@@ -222,7 +222,7 @@ func (srv *ActualizeMetadataCacheService) tryGetMetadata(ctx context.Context, fi
 	return ownerId, correlationId, timestamp, nil
 }
 
-func NewActualizeMetadataCacheService(lgr *logger.Logger, minioClient *s3.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, dba *db.DB) *ActualizeMetadataCacheService {
+func NewActualizeMetadataCacheService(lgr *logger.Logger, minioClient *s3client.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, dba *db.DB) *ActualizeMetadataCacheService {
 	trcr := otel.Tracer("scheduler/actualize-metadata-cache")
 	return &ActualizeMetadataCacheService{
 		lgr:                lgr,
