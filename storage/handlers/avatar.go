@@ -4,18 +4,19 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/minio/minio-go/v7"
-	"github.com/siyouyun-open/imaging"
 	"image"
 	"image/jpeg"
 	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/labstack/echo/v4"
+	"github.com/siyouyun-open/imaging"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/utils"
-	"strconv"
-	"time"
 )
 
 const FormFile = "data"
@@ -35,7 +36,7 @@ type abstractMethods interface {
 }
 
 type abstractAvatarHandler struct {
-	minio       *s3client.InternalMinioClient
+	s3          *s3client.S3Wrapper
 	minioConfig *utils.MinioConfig
 	delegate    abstractMethods
 	lgr         *logger.Logger
@@ -97,7 +98,14 @@ func (h *abstractAvatarHandler) putSizedFile(c echo.Context, srcImage image.Imag
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during get avatar filename: %v", err)
 		return "", "", err
 	}
-	if _, err := h.minio.PutObject(c.Request().Context(), bucketName, filename, byteBuffer, int64(byteBuffer.Len()), minio.PutObjectOptions{ContentType: contentType}); err != nil {
+	seekable := bytes.NewReader(byteBuffer.Bytes())
+	if _, err := h.s3.PutObject(c.Request().Context(), &s3.PutObjectInput{
+		Bucket:        &bucketName,
+		Key:           &filename,
+		Body:          seekable,
+		ContentLength: new(int64(byteBuffer.Len())),
+		ContentType:   &contentType,
+	}); err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during upload object: %v", err)
 		return "", "", err
 	}
@@ -119,7 +127,7 @@ func (h *abstractAvatarHandler) Download(c echo.Context) error {
 
 	objId := c.Param("filename")
 
-	exists, info, err := h.minio.FileExists(c.Request().Context(), bucketName, objId)
+	exists, info, err := h.s3.FileExists(c.Request().Context(), bucketName, objId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "stat fail"})
 	}
@@ -127,27 +135,39 @@ func (h *abstractAvatarHandler) Download(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, &utils.H{"status": "not found"})
 	}
 
-	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(info.Size, 10))
-	c.Response().Header().Set(echo.HeaderContentType, info.ContentType)
-	//c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; Filename=\""+mongoDto.Filename+"\"")
+	if info.ContentType == nil {
+		h.lgr.WithTracing(c.Request().Context()).Error("nil ContentType")
+		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "internal error"})
+	}
 
-	object, e := h.minio.GetObject(c.Request().Context(), bucketName, objId, minio.GetObjectOptions{})
+	if info.ContentLength == nil {
+		h.lgr.WithTracing(c.Request().Context()).Error("nil ContentLength")
+		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "internal error"})
+	}
+
+	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(*info.ContentLength, 10))
+	c.Response().Header().Set(echo.HeaderContentType, *info.ContentType)
+
+	object, e := h.s3.GetObject(c.Request().Context(), &s3.GetObjectInput{
+		Bucket: &bucketName,
+		Key:    &objId,
+	})
 	if e != nil {
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
 	}
-	defer object.Close()
+	defer object.Body.Close()
 
 	avatarCacheableResponse(c)
-	return c.Stream(http.StatusOK, info.ContentType, object)
+	return c.Stream(http.StatusOK, *info.ContentType, object.Body)
 }
 
 type UserAvatarHandler struct {
 	abstractAvatarHandler
 }
 
-func NewUserAvatarHandler(lgr *logger.Logger, minio *s3client.InternalMinioClient, minioConfig *utils.MinioConfig) *UserAvatarHandler {
+func NewUserAvatarHandler(lgr *logger.Logger, s3 *s3client.S3Wrapper, minioConfig *utils.MinioConfig) *UserAvatarHandler {
 	uah := UserAvatarHandler{}
-	uah.minio = minio
+	uah.s3 = s3
 	uah.delegate = &uah
 	uah.minioConfig = minioConfig
 	uah.lgr = lgr
@@ -177,9 +197,9 @@ type ChatAvatarHandler struct {
 	abstractAvatarHandler
 }
 
-func NewChatAvatarHandler(lgr *logger.Logger, minio *s3client.InternalMinioClient, minioConfig *utils.MinioConfig) *ChatAvatarHandler {
+func NewChatAvatarHandler(lgr *logger.Logger, s3 *s3client.S3Wrapper, minioConfig *utils.MinioConfig) *ChatAvatarHandler {
 	uah := ChatAvatarHandler{}
-	uah.minio = minio
+	uah.s3 = s3
 	uah.delegate = &uah
 	uah.minioConfig = minioConfig
 	uah.lgr = lgr
