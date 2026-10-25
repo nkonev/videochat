@@ -152,7 +152,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	aKey := services.GetKey(filteredFilename, chatFileItemUuid, chatId)
 
 	// check that this file does not exist
-	exists, _, err := h.minio.FileExists(c.Request().Context(), bucketName, aKey)
+	exists, _, err := h.awsS3.FileExists(c.Request().Context(), bucketName, aKey)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf(err.Error())
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "error", "message": err.Error()})
@@ -212,9 +212,19 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		urlVals.Set("partNumber", utils.IntToString(i))
 		urlVals.Set("uploadId", *upload.UploadId)
 
-		u, err := h.minio.Presign(c.Request().Context(), "PUT", bucketName, aKey, uploadDuration, urlVals)
+		presUrl, err := h.awsS3.PresignClient.PresignPutObject(c.Request().Context(), &s3.PutObjectInput{
+			Bucket:  &bucketName,
+			Key:     &aKey,
+			Tagging: new(urlVals.Encode()),
+		}, s3.WithPresignExpires(uploadDuration))
 		if err != nil {
-			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting downlad url %v", err)
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting presigned put url %v", err)
+			return err
+		}
+
+		u, err := url.Parse(presUrl.URL)
+		if err != nil {
+			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing presigned put url %v", err)
 			return err
 		}
 
