@@ -8,10 +8,6 @@ import (
 	awsCredentialsv2 "github.com/aws/aws-sdk-go-v2/credentials"
 	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/aws-sdk-go/aws"
-	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	awsS3 "github.com/aws/aws-sdk-go/service/s3"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/minio/minio-go/v7"
@@ -63,7 +59,6 @@ func main() {
 		fx.Provide(
 			configureTracer,
 			configureInternalMinio,
-			configureAwsS3,
 			configureAwsS3v2,
 			configureMinioEntities,
 			configureEcho,
@@ -247,7 +242,7 @@ func configureEcho(
 }
 
 func configureInternalMinio() (*s3.InternalMinioClient, error) {
-	endpoint := viper.GetString("minio.internalEndpoint")
+	endpoint := viper.GetString("minio.internalEndpointMinio")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 	location := viper.GetString("minio.location")
@@ -266,35 +261,10 @@ func configureInternalMinio() (*s3.InternalMinioClient, error) {
 	return &s3.InternalMinioClient{minioClient}, nil
 }
 
-// https://github.com/aws/aws-sdk-go
-func configureAwsS3() *awsS3.S3 {
-	endpoint := viper.GetString("minio.internalEndpoint")
-	accessKeyID := viper.GetString("minio.accessKeyId")
-	secretAccessKey := viper.GetString("minio.secretAccessKey")
-	location := viper.GetString("minio.location")
-	secured := viper.GetBool("minio.secured")
-
-	creds := awsCredentials.NewStaticCredentials(accessKeyID, secretAccessKey, "")
-
-	nonSecured := !secured
-
-	forcePath := true
-	cfg := aws.Config{
-		Endpoint:         &endpoint,
-		Credentials:      creds,
-		S3ForcePathStyle: &forcePath,
-		Region:           &location,
-		DisableSSL:       &nonSecured,
-	}
-	sess := session.Must(session.NewSession(&cfg))
-	svc := awsS3.New(sess)
-	return svc
-}
-
 // https://docs.rustfs.com/en/developer/sdk/go
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
 func configureAwsS3v2() (*s3v2.Client, error) {
-	endpoint := viper.GetString("minio.internalEndpointv2")
+	endpoint := viper.GetString("minio.internalEndpoint")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
 	location := viper.GetString("minio.location")

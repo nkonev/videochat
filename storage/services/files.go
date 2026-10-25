@@ -566,13 +566,8 @@ func SerializeOriginalKeyToMetadata(originalKeyParam string) map[string]string {
 	return userMetadata
 }
 
-func GetOriginalKeyFromMetadata(userMetadata minio.StringMap, hasAmzPrefix bool) (string, error) {
-	var prefix = ""
-	if hasAmzPrefix {
-		prefix = xAmzMetaPrefix
-	}
-
-	originalKeyParam, ok := userMetadata[prefix+strings.Title(originalKey)]
+func GetOriginalKeyFromMetadata(userMetadata minio.StringMap) (string, error) {
+	originalKeyParam, ok := userMetadata[originalKey]
 	if !ok {
 		return "", errors.New("Unable to get originalKey")
 	}
