@@ -413,7 +413,7 @@ func configureMinioEntities(lgr *logger.Logger, s3Client *client.S3Wrapper) (*ut
 	if shouldCreateSubscription {
 		lgr.Infof("Will create subscription for bucket %v to arn %v", f, arn)
 
-		bucketName := viper.GetString("minio.bucket.files")
+		bucketName := f
 
 		output, err := s3Client.PutBucketNotificationConfiguration(ctx, &s3.PutBucketNotificationConfigurationInput{
 			Bucket: new(bucketName),
