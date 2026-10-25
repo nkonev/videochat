@@ -23,7 +23,7 @@ import (
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/producer"
-	"nkonev.name/storage/s3"
+	"nkonev.name/storage/s3client"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
 )
@@ -31,8 +31,8 @@ import (
 const headerCorrelationId = "X-CorrelationId"
 
 type FilesHandler struct {
-	minio            *s3.InternalMinioClient
-	awsS3            *s3v2.Client
+	minio            *s3client.InternalMinioClient
+	awsS3            *s3client.S3Wrapper
 	restClient       *client.RestClient
 	minioConfig      *utils.MinioConfig
 	filesService     *services.FilesService
@@ -51,8 +51,8 @@ const ConvertingImage = "/images/covers/ffmpeg_converting.jpg"
 
 func NewFilesHandler(
 	lgr *logger.Logger,
-	minio *s3.InternalMinioClient,
-	awsS3 *s3v2.Client,
+	minio *s3client.InternalMinioClient,
+	awsS3 *s3client.S3Wrapper,
 	restClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
 	filesService *services.FilesService,
