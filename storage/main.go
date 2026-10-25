@@ -263,7 +263,7 @@ func configureInternalMinio() (*s3client.InternalMinioClient, error) {
 
 // https://docs.rustfs.com/en/developer/sdk/go
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
-func configureAwsS3v2() (*s3client.S3Wrapper, error) {
+func configureAwsS3v2(lgr *logger.Logger) (*s3client.S3Wrapper, error) {
 	endpoint := viper.GetString("minio.internalEndpoint")
 	accessKeyID := viper.GetString("minio.accessKeyId")
 	secretAccessKey := viper.GetString("minio.secretAccessKey")
@@ -287,7 +287,7 @@ func configureAwsS3v2() (*s3client.S3Wrapper, error) {
 		}
 	})
 
-	return &s3client.S3Wrapper{client}, nil
+	return s3client.NewS3Wrapper(client, lgr), nil
 }
 
 func configureTracer(lgr *logger.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
@@ -355,16 +355,16 @@ func configureMinioEntities(lgr *logger.Logger, s3Client *s3client.S3Wrapper) (*
 	var err error
 
 	ctx := context.Background()
-	if ua, err = utils.EnsureAndGetUserAvatarBucket(ctx, lgr, s3Client); err != nil {
+	if ua, err = utils.EnsureAndGetUserAvatarBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
-	if ca, err = utils.EnsureAndGetChatAvatarBucket(ctx, lgr, s3Client); err != nil {
+	if ca, err = utils.EnsureAndGetChatAvatarBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
-	if f, err = utils.EnsureAndGetFilesBucket(ctx, lgr, s3Client); err != nil {
+	if f, err = utils.EnsureAndGetFilesBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
-	if p, err = utils.EnsureAndGetFilesPreviewBucket(ctx, lgr, s3Client); err != nil {
+	if p, err = utils.EnsureAndGetFilesPreviewBucket(ctx, s3Client); err != nil {
 		return nil, err
 	}
 
