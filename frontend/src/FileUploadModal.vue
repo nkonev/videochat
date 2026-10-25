@@ -285,6 +285,7 @@ export default {
                     const uploadResults = [];
                     // [2/3] upload parts by s3's presigned links
                     for (const presignedUrlObj of fileToUpload.presignedUrls) {
+                      // multipart upload proxying 4/6
                       const partNumber = presignedUrlObj.partNumber; // starts from 1
                       const start = (partNumber - 1) * chunkSize;
                       const end = partNumber * chunkSize;
@@ -323,6 +324,7 @@ export default {
 
                       this.setSendMessageAfterUploadFileItemUuidInNeed(fileToUpload.fileItemUuid);
 
+                      // multipart upload proxying 5/6
                       uploadResults.push({etag: JSON.parse(res.headers.etag), partNumber: partNumber});
                     }
 
@@ -338,6 +340,7 @@ export default {
                     await axios.put(`/api/storage/${fileToUpload.chatId}/upload/finish`, {
                       key: fileToUpload.key,
                       parts: uploadResults,
+                      // multipart upload proxying 6/6
                       uploadId: fileToUpload.uploadId
                     });
 

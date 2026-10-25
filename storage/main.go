@@ -272,26 +272,30 @@ func (s *uploadParamsFromContextPresigner) PresignHTTP(
 	payloadHash string, service string, region string, signingTime time.Time,
 	optFns ...func(*v4.SignerOptions),
 ) (url string, signedHeader http.Header, err error) {
-	pn := ctx.Value(dto.CtxKeyPartNumber)
-	uplid := ctx.Value(dto.CtxKeyUpploadId)
-
 	cloned := r.Clone(ctx)
-	turl := cloned.URL
-	qq := turl.Query()
 
-	qq.Del("x-id")
+	uplid, ok := dto.UpploadIdFromContext(ctx)
+	if ok {
+		pn, ok := dto.PartNumberFromContext(ctx)
+		if !ok {
+			err = fmt.Errorf("uploadId requires partNumber as well")
+			return
+		}
 
-	spn := utils.InterfaceToString(pn)
-	if spn != "" {
-		qq.Add("partNumber", spn)
+		turl := cloned.URL
+		qq := turl.Query()
+
+		// multipart upload proxying 2/6
+		qq.Del("x-id") // s3 going to return error otherwise
+
+		// multipart upload proxying 3/6
+		qq.Add("uploadId", uplid)
+		qq.Add("partNumber", pn)
+
+		turl.RawQuery = qq.Encode()
+
+		cloned.URL = turl
 	}
-	suplid := utils.InterfaceToString(uplid)
-	if suplid != "" {
-		qq.Add("uploadId", suplid)
-	}
-	turl.RawQuery = qq.Encode()
-
-	cloned.URL = turl
 
 	return s.delegate.PresignHTTP(ctx, credentials, cloned, payloadHash, service, region, signingTime, optFns...)
 }
@@ -322,7 +326,9 @@ func configureAwsS3v2(lgr *logger.Logger) (*client.S3Wrapper, error) {
 		}
 	})
 
-	sgn := v4.NewSigner()
+	sgn := v4.NewSigner(func(so *v4.SignerOptions) {
+		so.DisableURIPathEscaping = true
+	})
 
 	sgnwr := &uploadParamsFromContextPresigner{
 		delegate: sgn,
