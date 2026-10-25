@@ -57,12 +57,10 @@ func (c *S3Wrapper) FileExists(ctx context.Context, bucket, key string) (bool, *
 }
 
 func isS3NotFoundError(err error) bool {
-	if err != nil {
-		if apiError, ok := errors.AsType[smithy.APIError](err); ok {
-			switch apiError.(type) {
-			case *types.NotFound:
-				return true
-			}
+	if apiError, ok := errors.AsType[smithy.APIError](err); ok {
+		switch apiError.(type) {
+		case *types.NotFound:
+			return true
 		}
 	}
 
