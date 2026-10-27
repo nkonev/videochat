@@ -229,6 +229,9 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 			return err
 		}
 
+		// we do all this stuff in order not to expose s3 outside
+		// but rather have it under one domain with the different path
+		// see also traefik stripping path middlewares
 		stringUrl, err := services.ChangeMinioUrl(u)
 		if err != nil {
 			return err
