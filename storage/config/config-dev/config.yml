@@ -111,7 +111,7 @@ schedulers:
     chatCount: 100
   actualizeGeneratedFilesTask:
     # TODO rustfs
-    enabled: true
+    enabled: false
     cron: "0 * * * * *"
     expiration: "30m"
   actualizeMetadataCacheTask:
