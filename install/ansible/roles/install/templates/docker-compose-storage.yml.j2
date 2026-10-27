@@ -36,8 +36,8 @@ services:
         # TODO rustfs add protocol
         - STORAGE_MINIO.INTERNALENDPOINT=minio:9000
         - STORAGE_MINIO.INTERCONTAINERURL=http://minio:9000
-        - STORAGE_MINIO.PUBLICDOWNLOADTTL=24h
-        - STORAGE_MINIO.PUBLICUPLOADTTL=24h
+        - STORAGE_MINIO.PRESIGNDOWNLOADTTL=24h
+        - STORAGE_MINIO.PRESIGNUPLOADTTL=24h
         # TODO rustfs
         - STORAGE_MINIO.ACCESSKEYID={{ minio_user }}
         - STORAGE_MINIO.SECRETACCESSKEY={{ minio_password }}

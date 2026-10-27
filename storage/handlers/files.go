@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -185,8 +184,9 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, correlationIdP, nil, reqDto.IsMessageRecording, utils.GetUnixMilliUtc())
 
-	expire := viper.GetDuration("minio.multipart.expire")
-	expTime := time.Now().UTC().Add(expire)
+	uploadDuration := viper.GetDuration("minio.presignUploadTtl")
+
+	expTime := time.Now().UTC().Add(uploadDuration)
 	mpu := s3.CreateMultipartUploadInput{
 		Expires:  &expTime,
 		Bucket:   &bucketName,
@@ -197,8 +197,6 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
-	uploadDuration := viper.GetDuration("minio.presignUploadTtl")
 
 	chunkSize := viper.GetInt64("minio.multipart.chunkSize")
 	chunksNum := int(reqDto.FileSize / chunkSize)
@@ -799,26 +797,37 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 		}
 		// end check
 
-		err = h.minio.RemoveObject(c.Request().Context(), bucketName, fileId, minio.RemoveObjectOptions{})
+		_, err = h.awsS3.DeleteObject(c.Request().Context(), &s3.DeleteObjectInput{
+			Bucket: &bucketName,
+			Key:    &fileId,
+		})
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 
 		if utils.IsVideo(fileId) {
-			previewToCheck := utils.SetVideoPreviewExtension(fileId)
-			err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
+			previewKey := utils.SetVideoPreviewExtension(fileId)
+			_, err = h.awsS3.DeleteObject(c.Request().Context(), &s3.DeleteObjectInput{
+				Bucket: &h.minioConfig.FilesPreview,
+				Key:    &previewKey,
+			})
 			if err != nil {
-				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing video preview object %v", err)
 			}
 		} else if utils.IsImage(fileId) {
-			previewToCheck := utils.SetImagePreviewExtension(fileId)
-			err = h.minio.RemoveObject(c.Request().Context(), h.minioConfig.FilesPreview, previewToCheck, minio.RemoveObjectOptions{})
+			previewKey := utils.SetImagePreviewExtension(fileId)
+			_, err = h.awsS3.DeleteObject(c.Request().Context(), &s3.DeleteObjectInput{
+				Bucket: &h.minioConfig.FilesPreview,
+				Key:    &previewKey,
+			})
 			if err != nil {
-				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing pimage preview object %v", err)
 			}
 		}
 	} else if bindTo.FileItemUuid != nil {
+		// "Remove message with files" button
+
 		fileItemUuid := *bindTo.FileItemUuid
 		// check this fileItem belongs to user
 		belongs, err := db.CheckFileItemBelongsToUser(c.Request().Context(), h.dba, chatId, fileItemUuid, userPrincipalDto.UserId)
@@ -833,34 +842,48 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 
 		prefix := fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 
-		// send events (they won't be sent via minio subscription, so we send them manually)
-		var fileObjects <-chan minio.ObjectInfo = h.minio.ListObjects(c.Request().Context(), bucketName, minio.ListObjectsOptions{
-			Prefix:       prefix,
-			Recursive:    true,
-			WithMetadata: true,
-		})
+		maxFilesInBatch := viper.GetInt("minio.delete.batch")
 
-		batch := []minio.ObjectInfo{}
-		for fileOjInfo := range fileObjects {
-			batch = append(batch, fileOjInfo)
-			if len(batch) == utils.DefaultSize {
-				h.sendFileDeletedToUsers(c.Request().Context(), chatId, fileItemUuid, batch)
-				batch = []minio.ObjectInfo{}
+		var continuationToken *string
+		for {
+			res, err := h.awsS3.ListObjectsV2(c.Request().Context(), &s3.ListObjectsV2Input{
+				Bucket:            &bucketName,
+				ContinuationToken: continuationToken,
+				Prefix:            &prefix,
+				MaxKeys:           new(int32(maxFilesInBatch)),
+			})
+			if err != nil {
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during iterating over objects fy prefix %v: %v", prefix, err)
+				return c.NoContent(http.StatusInternalServerError)
 			}
-		}
-		if len(batch) > 0 {
-			h.sendFileDeletedToUsers(c.Request().Context(), chatId, fileItemUuid, batch)
+			continuationToken = res.ContinuationToken
+
+			objs := []types.ObjectIdentifier{}
+			for _, v := range res.Contents {
+				objs = append(objs, types.ObjectIdentifier{
+					Key: v.Key,
+				})
+			}
+
+			_, err = h.awsS3.DeleteObjects(c.Request().Context(), &s3.DeleteObjectsInput{
+				Bucket: &bucketName,
+				Delete: &types.Delete{
+					Objects: objs,
+				},
+			})
+			if err != nil {
+				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during iterating over objects fy prefix %v: %v", prefix, err)
+				return c.NoContent(http.StatusInternalServerError)
+			}
+
+			if len(res.Contents) < maxFilesInBatch {
+				break
+			}
 		}
 
 		err = db.RemoveFileItem(c.Request().Context(), h.dba, chatId, fileItemUuid)
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object metadata %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-
-		err = h.minio.RemoveObject(c.Request().Context(), bucketName, prefix, minio.RemoveObjectOptions{ForceDelete: true})
-		if err != nil {
-			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during removing object %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	} else {
@@ -869,39 +892,6 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
-}
-
-func (h *FilesHandler) sendFileDeletedToUsers(c context.Context, chatId int64, fileItemUuid string, batch []minio.ObjectInfo) {
-	bucketName := h.minioConfig.Files
-
-	eventType := dto.FILE_DELETED
-
-	now := time.Now().UTC()
-	err := h.restClient.GetChatParticipantIds(c, chatId, func(participantIds []int64) error {
-		for _, fileOjInfo := range batch {
-			normalizedKey := utils.StripBucketName(fileOjInfo.Key, bucketName)
-
-			fileInfo := &dto.FileInfoDto{
-				Id:             normalizedKey,
-				FileItemUuid:   fileItemUuid,
-				LastModified:   now,
-				CreateDateTime: now,
-			}
-
-			for _, participantId := range participantIds {
-				err := h.publisher.PublishFileEvent(c, participantId, chatId, &dto.WrappedFileInfoDto{
-					FileInfoDto: fileInfo,
-				}, eventType, nil)
-				if err != nil {
-					h.lgr.WithTracing(c).Errorf("Error during sending object %v", err)
-				}
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		h.lgr.WithTracing(c).Errorf("Error during GetChatParticipantIds %v", err)
-	}
 }
 
 func (h *FilesHandler) checkFileItemBelongsToUser(fileItemUuid string, c echo.Context, chatId int64, bucketName string, userPrincipalDto *auth.AuthResult) (bool, error) {
