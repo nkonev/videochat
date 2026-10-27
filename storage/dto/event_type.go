@@ -11,7 +11,7 @@ const ObjectCreatedCompleteMultipartUpload = ObjectCreated + ":CompleteMultipart
 
 const ObjectRemovedDelete = ObjectRemoved + ":Delete"
 
-const ObjectCreatedPutTagging = ObjectCreated + ":PutTagging"
+const ObjectCreatedPutTagging = "s3:ObjectTagging:Put"
 const ObjectCreatedPut = ObjectCreated + ":Put"
 
 // actually it is output event

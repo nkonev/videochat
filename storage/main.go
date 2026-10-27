@@ -467,6 +467,7 @@ func configureMinioEntities(lgr *logger.Logger, s3Client *client.S3Wrapper) (*ut
 
 		bucketName := f
 
+		// see also storage/listener/s3_event_listener.go
 		output, err := s3Client.PutBucketNotificationConfiguration(ctx, &s3.PutBucketNotificationConfigurationInput{
 			Bucket: new(bucketName),
 			NotificationConfiguration: &types.NotificationConfiguration{
@@ -476,6 +477,7 @@ func configureMinioEntities(lgr *logger.Logger, s3Client *client.S3Wrapper) (*ut
 						Events: []types.Event{
 							types.Event(dto.ObjectCreated + ":*"),
 							types.Event(dto.ObjectRemoved + ":*"),
+							types.Event(dto.ObjectCreatedPutTagging),
 						},
 					},
 				},
