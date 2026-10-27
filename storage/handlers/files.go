@@ -953,8 +953,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	// TODO rustfs why not to set published in the db ?
-	// rely on event ?
+	// we copy tag published=true into database in the event listener flow
 	err = h.minio.PutObjectTagging(c.Request().Context(), bucketName, fileId, objectTags, minio.PutObjectTaggingOptions{})
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during saving tags %v", err)
