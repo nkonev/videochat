@@ -373,7 +373,14 @@ func (h *FilesHandler) ReplaceHandler(c echo.Context) error {
 
 	var userMetadata = services.SerializeMetadataSimple(userPrincipalDto.UserId, nil, nil, nil, utils.GetUnixMilliUtc())
 
-	if _, err := h.minio.PutObject(c.Request().Context(), bucketName, aKey, src, fileSize, minio.PutObjectOptions{ContentType: contentType, UserMetadata: userMetadata}); err != nil {
+	if _, err := h.awsS3.PutObject(c.Request().Context(), &s3.PutObjectInput{
+		Bucket:        &bucketName,
+		Key:           &aKey,
+		Body:          src,
+		ContentLength: &fileSize,
+		ContentType:   &contentType,
+		Metadata:      userMetadata,
+	}); err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during upload object: %v", err)
 		return err
 	}
