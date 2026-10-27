@@ -646,7 +646,7 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 
 	bucketName := h.minioConfig.Files
 
-	exists, obj, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, _, err := h.awsS3.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Unable to check existence of %v: %v", fileId, err)
 		return c.JSON(http.StatusOK, StatusItem{
@@ -671,7 +671,7 @@ func (h *FilesHandler) ViewStatusHandler(c echo.Context) error {
 
 		r := StatusItem{
 			Status:       "ok",
-			Filename:     services.ReadFilename(obj.Key),
+			Filename:     services.ReadFilename(fileId),
 			FileItemUuid: &fileItemUuid,
 		}
 		if mce != nil {
