@@ -37,10 +37,6 @@ type FilesHandler struct {
 	publisher        *producer.RabbitFileUploadedPublisher
 }
 
-type RenameDto struct {
-	Newname string `json:"newname"`
-}
-
 const NotFoundImage = "/images/covers/not_found.png"
 const ConvertingImage = "/images/covers/ffmpeg_converting.jpg"
 
