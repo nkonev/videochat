@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
@@ -28,7 +27,6 @@ import (
 const headerCorrelationId = "X-CorrelationId"
 
 type FilesHandler struct {
-	minio            *client.InternalMinioClient
 	awsS3            *client.S3Wrapper
 	restClient       *client.RestClient
 	minioConfig      *utils.MinioConfig
@@ -48,7 +46,6 @@ const ConvertingImage = "/images/covers/ffmpeg_converting.jpg"
 
 func NewFilesHandler(
 	lgr *logger.Logger,
-	minio *client.InternalMinioClient,
 	awsS3 *client.S3Wrapper,
 	restClient *client.RestClient,
 	minioConfig *utils.MinioConfig,
@@ -59,7 +56,6 @@ func NewFilesHandler(
 ) *FilesHandler {
 	return &FilesHandler{
 		lgr:              lgr,
-		minio:            minio,
 		awsS3:            awsS3,
 		restClient:       restClient,
 		minioConfig:      minioConfig,
@@ -1498,7 +1494,7 @@ func (h *FilesHandler) DownloadHandler(c echo.Context) error {
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
 
-	exists, _, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, _, err := h.awsS3.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1606,7 +1602,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 
 	// check file is public
 	fileId := c.QueryParam(utils.FileParam)
-	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, _, err := h.awsS3.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1615,13 +1611,16 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
 	}
 
-	tagging, err := h.minio.GetObjectTagging(c.Request().Context(), bucketName, fileId, minio.GetObjectTaggingOptions{})
+	tagging, err := h.awsS3.GetObjectTagging(c.Request().Context(), &s3.GetObjectTaggingInput{
+		Bucket: &bucketName,
+		Key:    &fileId,
+	})
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	isPublic, _, err := services.DeserializeTags(tagging.ToMap())
+	isPublic, _, err := services.DeserializeTags(services.ConvertTaggingToMap(tagging.TagSet))
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1630,7 +1629,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	if !isPublic {
 		h.lgr.WithTracing(c.Request().Context()).Infof("File %v is not public, checking is chat blog", fileId)
 
-		chatId, err := utils.ParseChatId(objectInfo.Key)
+		chatId, err := utils.ParseChatId(fileId)
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during parsing chatId: %v", err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -1658,7 +1657,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 	// end check
 
 	// send redirect to presigned
-	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(c.Request().Context(), objectInfo.Key)
+	downloadUrl, ttl, err := h.filesService.GetTemporaryDownloadUrl(c.Request().Context(), fileId)
 	if err != nil {
 		return err
 	}
