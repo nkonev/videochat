@@ -72,6 +72,7 @@ func Set(ctx context.Context, co CommonOperations, metadataCache dto.MetadataCac
 		) on conflict (chat_id, file_item_uuid, filename) 
 		do update set 
 			published = $6,
+			correlation_id = $5,
 		    file_size = $7,
 			edit_date_time = $9
 	`, metadataColumns),

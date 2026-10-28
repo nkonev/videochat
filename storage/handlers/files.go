@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/auth"
 	"nkonev.name/storage/client"
@@ -713,16 +712,6 @@ type StatusItem struct {
 	Filename       string     `json:"filename"`
 }
 
-func (h *FilesHandler) getFilenameChatPrefix(chatId int64, fileItemUuid string) string {
-	var filenameChatPrefix string
-	if fileItemUuid == "" {
-		filenameChatPrefix = fmt.Sprintf("chat/%v/", chatId)
-	} else {
-		filenameChatPrefix = fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
-	}
-	return filenameChatPrefix
-}
-
 func (h *FilesHandler) ListFileItemUuids(c echo.Context) error {
 	var userPrincipalDto, ok = c.Get(utils.USER_PRINCIPAL_DTO).(*auth.AuthResult)
 	if !ok {
@@ -938,6 +927,18 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 		return c.NoContent(http.StatusNotFound)
 	}
 
+	correlationId := c.Request().Header.Get(headerCorrelationId)
+	var correlationIdP *string
+
+	if correlationId != "" {
+		_, err = uuid.Parse(correlationId)
+		if err != nil {
+			return c.NoContent(http.StatusBadRequest)
+		}
+
+		correlationIdP = &correlationId
+	}
+
 	ownerId := mce.OwnerId
 
 	if ownerId != userPrincipalDto.UserId {
@@ -946,27 +947,33 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 	}
 	// end check
 
-	tagsMap := services.SerializeTags(bindTo.Public)
-	objectTags, err := tags.MapToObjectTags(tagsMap)
-	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during mapping tags %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	// 1/2 pass correnaltion id in "Set public button"
+	tagsMap := services.SerializeTags(bindTo.Public, correlationIdP)
 
 	// we copy tag published=true into database in the event listener flow
-	err = h.minio.PutObjectTagging(c.Request().Context(), bucketName, fileId, objectTags, minio.PutObjectTaggingOptions{})
+	_, err = h.awsS3.PutObjectTagging(c.Request().Context(), &s3.PutObjectTaggingInput{
+		Bucket:  &bucketName,
+		Key:     &fileId,
+		Tagging: convertTagsToTagging(tagsMap),
+	})
 	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during saving tags %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-
-	publishedUrl, err := h.filesService.GetPublishedUrl(bindTo.Public, fileId)
-	if err != nil {
-		h.lgr.WithTracing(c.Request().Context()).Errorf("Error get public url: %v", err)
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error set public url: %v", err)
 		return err
 	}
 
-	return c.JSON(http.StatusOK, &utils.H{"status": "ok", "publishedUrl": publishedUrl})
+	return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
+}
+
+func convertTagsToTagging(tm map[string]string) *types.Tagging {
+	res := &types.Tagging{
+		TagSet: []types.Tag{},
+	}
+
+	for k, v := range tm {
+		res.TagSet = append(res.TagSet, types.Tag{Key: &k, Value: &v})
+	}
+
+	return res
 }
 
 type CountResponse struct {
@@ -1598,7 +1605,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	isPublic, err := services.DeserializeTags(tagging)
+	isPublic, _, err := services.DeserializeTags(tagging)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)

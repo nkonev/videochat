@@ -150,13 +150,17 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 
 	eventTime := utils.GetEventTimeFromTimestamp(timestamp)
 
-	publishedP, err := eventServiceResponse.GetTags()
+	publishedP, correlationIdFromTags, err := eventServiceResponse.GetTags()
 	if err != nil {
 		return nil, err
 	}
 	var published bool
 	if publishedP != nil {
 		published = *publishedP
+	}
+
+	if eventServiceResponse.GetMinioEvent().EventName == dto.ObjectCreatedPutTagging {
+		correlationId = correlationIdFromTags
 	}
 
 	me := eventServiceResponse.GetMinioEvent()

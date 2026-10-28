@@ -593,23 +593,39 @@ func TimestampKey() string {
 	return timestampKey
 }
 
-func SerializeTags(published bool) map[string]string {
+func SerializeTags(published bool, correlationId *string) map[string]string {
 	var userTags = map[string]string{}
 	userTags[publishedKey] = fmt.Sprintf("%v", published)
+	if correlationId != nil {
+		userTags[correlationIdKey] = *correlationId
+	}
 	return userTags
 }
 
-func DeserializeTags(tagging *tags.Tags) (bool, error) {
+func DeserializeTags(tagging *tags.Tags) (bool, *string, error) {
 	if tagging == nil {
-		return false, nil
+		return false, nil, nil
 	}
+
+	var err error
+	var published bool
+	var correlationId *string
 
 	var tagsMap map[string]string = tagging.ToMap()
 	publishedString, ok := tagsMap[publishedKey]
-	if !ok {
-		return false, nil
+	if ok {
+		published, err = utils.ParseBoolean(publishedString)
+		if err != nil {
+			return false, nil, err
+		}
 	}
-	return utils.ParseBoolean(publishedString)
+
+	correlationIdStr, ok := tagsMap[correlationIdKey]
+	if ok {
+		correlationId = &correlationIdStr
+	}
+
+	return published, correlationId, nil
 }
 
 func GetUsersRemotelyOrEmpty(lgr *logger.Logger, userIdSet map[int64]bool, restClient *client.RestClient, c context.Context) map[int64]*dto.User {
