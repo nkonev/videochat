@@ -71,15 +71,15 @@ type HandleEventResponse struct {
 	users      map[int64]*dto.User
 }
 
-func (r *HandleEventResponse) GetTags() (*bool, error) {
+func (r *HandleEventResponse) GetTags() (*bool, *string, error) {
 	if r == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
-	published, err := DeserializeTags(r.tagging)
+	published, correlationId, err := DeserializeTags(r.tagging)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return &published, nil
+	return &published, correlationId, nil
 }
 
 func (r *HandleEventResponse) GetMinioEvent() *dto.MinioEvent {
@@ -102,6 +102,10 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 				fileInfo, err = s.filesService.GetFileInfo(ctx, false, utils.ChatIdNonExistent, utils.MessageIdNonExistent, userId, mce)
 				if err != nil {
 					s.lgr.WithTracing(ctx).Errorf("Error get file info: %v, skipping", err)
+					continue
+				}
+				if fileInfo == nil {
+					s.lgr.WithTracing(ctx).Errorf("nil file info, skipping")
 					continue
 				}
 				if response.minioEvent == nil {
@@ -128,8 +132,10 @@ func (s *EventService) SendToParticipants(ctx context.Context, normalizedKey str
 			}
 		}
 		var correlationId *string
-		if mce != nil && mce.CorrelationId != nil {
-			correlationId = mce.CorrelationId
+		if mce != nil {
+			if mce.CorrelationId != nil {
+				correlationId = mce.CorrelationId
+			}
 		}
 		err = s.publisher.PublishFileEvent(ctx, participantId, chatId, &dto.WrappedFileInfoDto{
 			FileInfoDto: fileInfo,
