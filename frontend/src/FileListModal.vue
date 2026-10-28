@@ -85,11 +85,11 @@
                                             <v-btn size="medium" v-if="item.canEdit" @click="fireEdit(item)" :title="$vuetify.locale.t('$vuetify.edit')"><v-icon size="large">mdi-pencil</v-icon></v-btn>
 
                                             <template v-if="item.canShare">
-                                                <v-btn size="medium" v-if="!item.publishedUrl" @click="shareFile(item)">
+                                                <v-btn size="medium" v-if="!item.publishedUrl" @click="shareFile(item)" :loading="item.loadingPublished">
                                                     <v-icon color="primary" size="large" dark :title="$vuetify.locale.t('$vuetify.share_file')">mdi-export</v-icon>
                                                 </v-btn>
 
-                                                <v-btn size="medium" v-if="item.publishedUrl" @click="unshareFile(item)">
+                                                <v-btn size="medium" v-if="item.publishedUrl" @click="unshareFile(item)" :loading="item.loadingPublished">
                                                   <v-icon color="primary" size="large" dark :title="$vuetify.locale.t('$vuetify.unshare_file')">mdi-lock</v-icon>
                                                 </v-btn>
                                             </template>
@@ -179,6 +179,7 @@ import {messageIdHashPrefix} from "@/router/routes";
 import pageableModalMixin, {firstPage, pageSize} from "@/mixins/pageableModalMixin.js";
 import {getStoredFileListMode, setStoredFileListMode} from "@/store/localStore.js";
 import FileListContextMenu from "@/FileListContextMenu.vue";
+import {v4 as uuidv4} from "uuid";
 
 export default {
     mixins: [pageableModalMixin()],
@@ -192,6 +193,7 @@ export default {
             chatId: null,
             fileListMode: false,
             fileUploadTask: null,
+            publishCorrelationIdMap: {},
         }
     },
     computed: {
@@ -266,6 +268,7 @@ export default {
         transformItem(item) {
             item.hasNoMessage = false;
             item.loadingHasNoMessage = false;
+            item.loadingPublished = false;
         },
         openUploadModal() {
             bus.emit(OPEN_FILE_UPLOAD_MODAL, this.fileUploadTask);
@@ -304,16 +307,37 @@ export default {
             });
         },
         shareFile(dto) {
-            axios.put(`/api/storage/publish/file`, {id: dto.id, public: true}).then((resp)=>{
-                const link = resp.data.publishedUrl;
-                if (link) {
-                    navigator.clipboard.writeText(getUrlPrefix() + link);
-                    this.setTempNotification(this.$vuetify.locale.t('$vuetify.published_file_link_copied'));
-                }
+            dto.loadingPublished = true;
+            this.publishCorrelationIdMap[dto.id] = uuidv4();
+            axios.put(`/api/storage/publish/file`, {id: dto.id, public: true}, {
+              headers: {
+                "X-CorrelationId": this.publishCorrelationIdMap[dto.id],
+              }
+            }).catch(() => {
+              dto.loadingPublished = false;
             })
         },
         unshareFile(dto) {
-            axios.put(`/api/storage/publish/file`, {id: dto.id, public: false})
+            dto.loadingPublished = true;  
+            this.publishCorrelationIdMap[dto.id] = uuidv4();
+            axios.put(`/api/storage/publish/file`, {id: dto.id, public: false}, {
+              headers: {
+                "X-CorrelationId": this.publishCorrelationIdMap[dto.id],
+              }
+            }).catch(() => {
+              dto.loadingPublished = false;
+            })
+        },
+        onItemUpdatedOverride(dto) {
+          this.onItemUpdatedEvent(dto);
+          if (hasLength(this.publishCorrelationIdMap[dto.fileInfoDto.id]) && dto.correlationId == this.publishCorrelationIdMap[dto.fileInfoDto.id]) {
+            const link = dto.fileInfoDto.publishedUrl;
+            if (link) {
+                navigator.clipboard.writeText(getUrlPrefix() + link);
+                this.setTempNotification(this.$vuetify.locale.t('$vuetify.published_file_link_copied'));
+            }
+            delete this.publishCorrelationIdMap[dto.fileInfoDto.id];
+          }
         },
         fireEdit(dto) {
             bus.emit(OPEN_TEXT_EDIT_MODAL, {fileInfoDto: dto, chatId: this.chatId, fileItemUuid: this.fileItemUuid});
@@ -416,6 +440,7 @@ export default {
             this.messageIdToDetachFiles = null;
             this.fileUploadTask = null;
             this.showSearchButton = true;
+            this.publishCorrelationIdMap = {};
         },
         clearOnReset() {
             this.chatId = null;
@@ -459,7 +484,7 @@ export default {
       bus.on(OPEN_VIEW_FILES_DIALOG, this.showModal);
       bus.on(PREVIEW_CREATED, this.onPreviewCreated);
       bus.on(FILE_CREATED, this.onItemCreatedEvent);
-      bus.on(FILE_UPDATED, this.onItemUpdatedEvent);
+      bus.on(FILE_UPDATED, this.onItemUpdatedOverride);
       bus.on(FILE_REMOVED, this.onItemRemovedEvent);
       bus.on(LOGGED_OUT, this.onLogout);
       bus.on(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
@@ -469,7 +494,7 @@ export default {
         bus.off(OPEN_VIEW_FILES_DIALOG, this.showModal);
         bus.off(PREVIEW_CREATED, this.onPreviewCreated);
         bus.off(FILE_CREATED, this.onItemCreatedEvent);
-        bus.off(FILE_UPDATED, this.onItemUpdatedEvent);
+        bus.off(FILE_UPDATED, this.onItemUpdatedOverride);
         bus.off(FILE_REMOVED, this.onItemRemovedEvent);
         bus.off(LOGGED_OUT, this.onLogout);
         bus.off(REFRESH_ON_WEBSOCKET_RESTORED, this.onWsRestoredRefresh);
