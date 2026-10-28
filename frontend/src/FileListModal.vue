@@ -376,7 +376,7 @@ export default {
               })
         },
         getDate(item) {
-            return getHumanReadableDate(item.lastModified)
+            return getHumanReadableDate(item.createDateTime)
         },
         hasSearchString() {
             return hasLength(this.searchString)
