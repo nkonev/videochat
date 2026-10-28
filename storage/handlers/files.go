@@ -1367,13 +1367,23 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
 
-	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, objectInfo, err := h.awsS3.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !exists {
 		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
+	}
+
+	if objectInfo.ContentLength == nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("nil ContentLength")
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	if objectInfo.ContentType == nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("nil ContentType")
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	chatId, err := utils.ParseChatId(fileId)
@@ -1393,16 +1403,20 @@ func (h *FilesHandler) PreviewDownloadHandler(c echo.Context) error {
 	}
 	// end check
 
-	object, e := h.minio.GetObject(c.Request().Context(), bucketName, fileId, minio.GetObjectOptions{})
-	if e != nil {
+	gr, err := h.awsS3.GetObject(c.Request().Context(), &s3.GetObjectInput{
+		Bucket: &bucketName,
+		Key:    &fileId,
+	})
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error getting file preview %v", err)
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
 	}
-	defer object.Close()
+	defer gr.Body.Close()
 
-	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
-	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
+	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(*objectInfo.ContentLength, 10))
+	c.Response().Header().Set(echo.HeaderContentType, *objectInfo.ContentType)
 	h.previewCacheableResponse(c)
-	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
+	return c.Stream(http.StatusOK, *objectInfo.ContentType, gr.Body)
 }
 
 func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
@@ -1410,13 +1424,23 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 
 	// check user belongs to chat
 	fileId := c.QueryParam(utils.FileParam)
-	exists, objectInfo, err := h.minio.FileExists(c.Request().Context(), bucketName, fileId)
+	exists, objectInfo, err := h.awsS3.FileExists(c.Request().Context(), bucketName, fileId)
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting object %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	if !exists {
 		return c.Redirect(http.StatusTemporaryRedirect, NotFoundImage)
+	}
+
+	if objectInfo.ContentLength == nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("nil ContentLength")
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	if objectInfo.ContentType == nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("nil ContentType")
+		return c.NoContent(http.StatusInternalServerError)
 	}
 
 	chatId, err := utils.ParseChatId(fileId)
@@ -1445,17 +1469,21 @@ func (h *FilesHandler) PublicPreviewDownloadHandler(c echo.Context) error {
 	}
 	// end check
 
-	object, e := h.minio.GetObject(c.Request().Context(), bucketName, fileId, minio.GetObjectOptions{})
-	if e != nil {
+	gr, err := h.awsS3.GetObject(c.Request().Context(), &s3.GetObjectInput{
+		Bucket: &bucketName,
+		Key:    &fileId,
+	})
+	if err != nil {
+		h.lgr.WithTracing(c.Request().Context()).Errorf("Error getting public file preview %v", err)
 		return c.JSON(http.StatusInternalServerError, &utils.H{"status": "fail"})
 	}
-	defer object.Close()
+	defer gr.Body.Close()
 
-	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(objectInfo.Size, 10))
-	c.Response().Header().Set(echo.HeaderContentType, objectInfo.ContentType)
+	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(*objectInfo.ContentLength, 10))
+	c.Response().Header().Set(echo.HeaderContentType, *objectInfo.ContentType)
 	h.previewCacheableResponse(c)
 
-	return c.Stream(http.StatusOK, objectInfo.ContentType, object)
+	return c.Stream(http.StatusOK, *objectInfo.ContentType, gr.Body)
 }
 
 func (h *FilesHandler) DownloadHandler(c echo.Context) error {
