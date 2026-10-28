@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/tags"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 	"nkonev.name/storage/client"
@@ -602,8 +602,8 @@ func SerializeTags(published bool, correlationId *string) map[string]string {
 	return userTags
 }
 
-func DeserializeTags(tagging *tags.Tags) (bool, *string, error) {
-	if tagging == nil {
+func DeserializeTags(tagsMap map[string]string) (bool, *string, error) {
+	if tagsMap == nil {
 		return false, nil, nil
 	}
 
@@ -611,7 +611,6 @@ func DeserializeTags(tagging *tags.Tags) (bool, *string, error) {
 	var published bool
 	var correlationId *string
 
-	var tagsMap map[string]string = tagging.ToMap()
 	publishedString, ok := tagsMap[publishedKey]
 	if ok {
 		published, err = utils.ParseBoolean(publishedString)
@@ -626,6 +625,30 @@ func DeserializeTags(tagging *tags.Tags) (bool, *string, error) {
 	}
 
 	return published, correlationId, nil
+}
+
+func ConvertTagsToTagging(tm map[string]string) *types.Tagging {
+	res := &types.Tagging{
+		TagSet: []types.Tag{},
+	}
+
+	for k, v := range tm {
+		res.TagSet = append(res.TagSet, types.Tag{Key: &k, Value: &v})
+	}
+
+	return res
+}
+
+func ConvertTaggingToMap(ts []types.Tag) map[string]string {
+	res := map[string]string{}
+
+	for _, v := range ts {
+		if v.Key != nil && v.Value != nil {
+			res[*v.Key] = *v.Value
+		}
+	}
+
+	return res
 }
 
 func GetUsersRemotelyOrEmpty(lgr *logger.Logger, userIdSet map[int64]bool, restClient *client.RestClient, c context.Context) map[int64]*dto.User {

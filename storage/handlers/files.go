@@ -954,7 +954,7 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 	_, err = h.awsS3.PutObjectTagging(c.Request().Context(), &s3.PutObjectTaggingInput{
 		Bucket:  &bucketName,
 		Key:     &fileId,
-		Tagging: convertTagsToTagging(tagsMap),
+		Tagging: services.ConvertTagsToTagging(tagsMap),
 	})
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error set public url: %v", err)
@@ -962,18 +962,6 @@ func (h *FilesHandler) SetPublic(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &utils.H{"status": "ok"})
-}
-
-func convertTagsToTagging(tm map[string]string) *types.Tagging {
-	res := &types.Tagging{
-		TagSet: []types.Tag{},
-	}
-
-	for k, v := range tm {
-		res.TagSet = append(res.TagSet, types.Tag{Key: &k, Value: &v})
-	}
-
-	return res
 }
 
 type CountResponse struct {
@@ -1605,7 +1593,7 @@ func (h *FilesHandler) PublicDownloadHandler(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	isPublic, _, err := services.DeserializeTags(tagging)
+	isPublic, _, err := services.DeserializeTags(tagging.ToMap())
 	if err != nil {
 		h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deserializing object tags %v", err)
 		return c.NoContent(http.StatusInternalServerError)

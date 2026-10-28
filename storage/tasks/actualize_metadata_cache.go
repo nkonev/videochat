@@ -194,7 +194,7 @@ func (srv *ActualizeMetadataCacheService) tryGetTags(ctx context.Context, fileOj
 		return false
 	}
 
-	published, _, err := services.DeserializeTags(tags)
+	published, _, err := services.DeserializeTags(tags.ToMap())
 	if err != nil {
 		srv.lgr.WithTracing(ctx).Errorf("Unable to deserialize tags for %v: %v", fileOjInfo.Key, err)
 		return false

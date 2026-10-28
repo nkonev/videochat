@@ -4,8 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/tags"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
@@ -13,10 +12,10 @@ import (
 	"nkonev.name/storage/utils"
 )
 
-func NewEventService(lgr *logger.Logger, client *client.RestClient, minio *client.InternalMinioClient, minioConfig *utils.MinioConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
+func NewEventService(lgr *logger.Logger, client *client.RestClient, awsS3 *client.S3Wrapper, minioConfig *utils.MinioConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
 	return &EventService{
 		client:       client,
-		minio:        minio,
+		awsS3:        awsS3,
 		minioConfig:  minioConfig,
 		filesService: filesService,
 		publisher:    publisher,
@@ -26,7 +25,7 @@ func NewEventService(lgr *logger.Logger, client *client.RestClient, minio *clien
 
 type EventService struct {
 	client       *client.RestClient
-	minio        *client.InternalMinioClient
+	awsS3        *client.S3Wrapper
 	minioConfig  *utils.MinioConfig
 	filesService *FilesService
 	publisher    *producer.RabbitFileUploadedPublisher
@@ -38,13 +37,18 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 
 	var err error
 
-	var tagging *tags.Tags
+	var tm map[string]string
 	if eventType == dto.FILE_CREATED || eventType == dto.FILE_UPDATED {
-		tagging, err = s.minio.GetObjectTagging(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectTaggingOptions{})
+		tagging, err := s.awsS3.GetObjectTagging(ctx, &s3.GetObjectTaggingInput{
+			Bucket: &s.minioConfig.Files,
+			Key:    &normalizedKey,
+		})
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during getting tags %v", err)
 			return nil
 		}
+
+		tm = ConvertTaggingToMap(tagging.TagSet)
 	}
 
 	var users map[int64]*dto.User = map[int64]*dto.User{}
@@ -60,14 +64,14 @@ func (s *EventService) HandleEvent(ctx context.Context, normalizedKey string, ch
 	}
 	return &HandleEventResponse{
 		minioEvent: minioEvent,
-		tagging:    tagging,
+		tagging:    tm,
 		users:      users,
 	}
 }
 
 type HandleEventResponse struct {
 	minioEvent *dto.MinioEvent
-	tagging    *tags.Tags
+	tagging    map[string]string
 	users      map[int64]*dto.User
 }
 
