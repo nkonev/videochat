@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
@@ -63,7 +64,7 @@ func CreateS3EventListener(
 		case dto.FILE_CREATED:
 			fallthrough
 		case dto.FILE_UPDATED:
-			mce, err = createdDbEntity(meDto.NormalizedKey, meDto.ChatId, meDto.OwnerId, meDto.CorrelationId, meDto.Timestamp, eventServiceResponse)
+			mce, err = createdDbEntity(meDto.NormalizedKey, meDto.ChatId, meDto.OwnerId, meDto.CorrelationId, meDto.Timestamp, meDto.EventType == dto.FILE_UPDATED, eventServiceResponse)
 			if err != nil {
 				lgr.WithTracing(ctx).Errorf("Error during creating db entity: %v", err)
 				return err
@@ -137,7 +138,7 @@ func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig
 	return exists, err
 }
 
-func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId *string, timestamp int64, eventServiceResponse *services.HandleEventResponse) (*dto.MetadataCache, error) {
+func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId *string, timestamp int64, isUpdate bool, eventServiceResponse *services.HandleEventResponse) (*dto.MetadataCache, error) {
 	fileItemUuid, err := utils.ParseFileItemUuid(normalizedKey)
 	if err != nil {
 		return nil, err
@@ -168,6 +169,11 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 		return nil, errors.New("nil MinioEvent")
 	}
 
+	updateTime := eventTime
+	if isUpdate {
+		updateTime = time.Now().UTC()
+	}
+
 	return &dto.MetadataCache{
 		ChatId:         chatId,
 		FileItemUuid:   fileItemUuid,
@@ -177,6 +183,6 @@ func createdDbEntity(normalizedKey string, chatId, ownerId int64, correlationId 
 		Published:      published,
 		FileSize:       me.Size,
 		CreateDateTime: eventTime,
-		EditDateTime:   eventTime,
+		EditDateTime:   updateTime,
 	}, nil
 }
