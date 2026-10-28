@@ -24,7 +24,7 @@ func CreateS3EventListener(
 	eventService *services.EventService,
 	client *client.RestClient,
 	minioConfig *utils.MinioConfig,
-	minioClient *client.InternalMinioClient,
+	awsS3 *client.S3Wrapper,
 	convertingService *services.ConvertingService,
 	dba *db.DB,
 ) MinioEventsListener {
@@ -46,7 +46,7 @@ func CreateS3EventListener(
 
 		var eventServiceResponse *services.HandleEventResponse
 		var previewServiceResponse *services.PreviewResponse
-		previewAlreadyExists, err := isPreviewAlreadyExists(ctx, lgr, minioConfig, minioClient, meDto.NormalizedKey)
+		previewAlreadyExists, err := isPreviewAlreadyExists(ctx, lgr, minioConfig, awsS3, meDto.NormalizedKey)
 		if err != nil {
 			return err
 		}
@@ -129,9 +129,9 @@ func isEventForConvertingService(eventType dto.EventType, minioEvent *dto.MinioE
 		!previewExists // prevents the indefinite converting
 }
 
-func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig *utils.MinioConfig, minioClient *client.InternalMinioClient, normalizedKey string) (bool, error) {
+func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig *utils.MinioConfig, awsS3 *client.S3Wrapper, normalizedKey string) (bool, error) {
 	previewKey := utils.SetVideoPreviewExtension(normalizedKey)
-	exists, _, err := minioClient.FileExists(ctx, minioConfig.FilesPreview, previewKey)
+	exists, _, err := awsS3.FileExists(ctx, minioConfig.FilesPreview, previewKey)
 	if err != nil {
 		lgr.WithTracing(ctx).Errorf("Error during checking existence for %v: %v", previewKey, err)
 	}
