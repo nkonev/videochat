@@ -11,7 +11,6 @@ import (
 	"syscall"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/client"
 	"nkonev.name/storage/dto"
@@ -21,21 +20,19 @@ import (
 
 type ConvertingService struct {
 	awsS3            *client.S3Wrapper
-	minio            *client.InternalMinioClient
 	minioConfig      *utils.MinioConfig
 	tempDirPrefix    string
 	redisInfoService *RedisInfoService
 	lgr              *logger.Logger
 }
 
-func NewConvertingService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minio *client.InternalMinioClient, minioConfig *utils.MinioConfig, redisInfoService *RedisInfoService) *ConvertingService {
+func NewConvertingService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioConfig *utils.MinioConfig, redisInfoService *RedisInfoService) *ConvertingService {
 	tempDirPrefix := viper.GetString("converting.tempDir")
 	lgr.Infof("Ensuring temp root dir for the converting videos using ffmpeg: %v", tempDirPrefix)
 	os.MkdirAll(tempDirPrefix, os.ModePerm)
 
 	return &ConvertingService{
 		awsS3:            awsS3,
-		minio:            minio,
 		minioConfig:      minioConfig,
 		tempDirPrefix:    tempDirPrefix,
 		redisInfoService: redisInfoService,
@@ -123,8 +120,22 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 		s.lgr.WithTracing(ctx).Errorf("Error during stat for key %v: %v", normalizedKey, err)
 		return
 	}
+
+	convertedFile, err := os.Open(pathOfConvertedFile)
+	if err != nil {
+		s.lgr.WithTracing(ctx).Errorf("Error during opening file '%v': %v", pathOfConvertedFile, err)
+		return
+	}
+	defer convertedFile.Close()
+
 	// put recording_123_converted.webm to minio
-	_, err = s.minio.FPutObject(ctx, s.minioConfig.Files, convertedKey, pathOfConvertedFile, minio.PutObjectOptions{ContentType: utils.ConvertedContentType, UserMetadata: objectInfo.Metadata})
+	_, err = s.awsS3.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:      &s.minioConfig.Files,
+		Key:         &convertedKey,
+		Body:        convertedFile,
+		ContentType: new(utils.ConvertedContentType),
+		Metadata:    objectInfo.Metadata,
+	})
 	if err != nil {
 		s.lgr.WithTracing(ctx).Errorf("Error during storing to minio %v: %v", pathOfConvertedFile, err)
 		return
