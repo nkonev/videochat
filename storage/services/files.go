@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"
 	"nkonev.name/storage/client"
@@ -20,7 +20,7 @@ import (
 )
 
 type FilesService struct {
-	minio       *client.InternalMinioClient
+	awsS3       *client.S3Wrapper
 	restClient  *client.RestClient
 	minioConfig *utils.MinioConfig
 	dba         *db.DB
@@ -29,13 +29,13 @@ type FilesService struct {
 
 func NewFilesService(
 	lgr *logger.Logger,
-	minio *client.InternalMinioClient,
+	awsS3 *client.S3Wrapper,
 	chatClient *client.RestClient,
 	dba *db.DB,
 	minioConfig *utils.MinioConfig,
 ) *FilesService {
 	return &FilesService{
-		minio:       minio,
+		awsS3:       awsS3,
 		restClient:  chatClient,
 		minioConfig: minioConfig,
 		dba:         dba,
@@ -150,8 +150,17 @@ func (h *FilesService) GetListFilesItemUuids(
 func (h *FilesService) GetTemporaryDownloadUrl(ctx context.Context, aKey string) (string, time.Duration, error) {
 	ttl := viper.GetDuration("minio.presignDownloadTtl")
 
-	u, err := h.minio.PresignedGetObject(ctx, h.minioConfig.Files, aKey, ttl, url.Values{})
+	pres, err := h.awsS3.PresignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: &h.minioConfig.Files,
+		Key:    &aKey,
+	}, s3.WithPresignExpires(ttl))
 	if err != nil {
+		return "", time.Second, err
+	}
+
+	u, err := url.Parse(pres.URL)
+	if err != nil {
+		h.lgr.WithTracing(ctx).Errorf("Error during parsing presigned put url %v", err)
 		return "", time.Second, err
 	}
 
@@ -419,8 +428,8 @@ func (h *FilesService) getPreviewUrl(c context.Context, aKey string, requestedMe
 		query := respUrl.Query()
 		query.Set(utils.FileParam, previewMinioKey)
 
-		exists, obj, _ := h.minio.FileExists(c, h.minioConfig.FilesPreview, previewMinioKey)
-		if exists {
+		exists, obj, _ := h.awsS3.FileExists(c, h.minioConfig.FilesPreview, previewMinioKey)
+		if exists && obj.LastModified != nil {
 			// if preview file presents we do set time. it is need to distinguish on front. it's required to update early requested file item without preview
 			query.Set(utils.TimeParam, utils.Int64ToString(obj.LastModified.Unix()))
 		}
@@ -475,7 +484,7 @@ const xAmzMetaPrefix = "X-Amz-Meta-"
 
 // intended to use only in events processing and restoring,
 // not to use in the regular code - metadata can be absent because of poor backup
-func DeserializeMetadataFromMap(userMetadata0 minio.StringMap) (int64, string, int64, error) {
+func DeserializeMetadataFromMap(userMetadata0 map[string]string) (int64, string, int64, error) {
 	copied := map[string]string{}
 	for k, v := range userMetadata0 {
 		// At least stat() returns Capitalized
@@ -565,7 +574,7 @@ func SerializeOriginalKeyToMetadata(originalKeyParam string) map[string]string {
 	return userMetadata
 }
 
-func GetOriginalKeyFromMetadata(userMetadata minio.StringMap) (string, error) {
+func GetOriginalKeyFromMetadata(userMetadata map[string]string) (string, error) {
 	originalKeyParam, ok := userMetadata[originalKey]
 	if !ok {
 		return "", errors.New("Unable to get originalKey")
