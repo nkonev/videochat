@@ -1,8 +1,10 @@
 package tasks
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -80,14 +82,77 @@ func (m *RequestUserMetadata) HandleBuild(
 		return out, metadata, fmt.Errorf("unknown request type %T", req)
 	}
 
-	rumd, ok := dto.RequestUserMetadataFromContext(ctx)
-	if ok && rumd {
+	ok = dto.RequestUserMetadataFromContext(ctx)
+	if ok {
 		q := req.URL.Query()
 		q.Set("metadata", "true")
 		req.URL.RawQuery = q.Encode()
 	}
 
 	return next.HandleBuild(ctx, in)
+}
+
+func AddCacheBodyToStringMiddleware(stack *middleware.Stack) error {
+	// /home/nkonev/go/pkg/mod/github.com/aws/aws-sdk-go-v2/service/s3@v1.114.5/internal/customizations/handle_200_error.go
+	return stack.Deserialize.Insert(&CacheBodyToString{}, "OperationDeserializer", middleware.After)
+}
+
+type CacheBodyToString struct{}
+
+func (*CacheBodyToString) ID() string {
+	return "CacheBodyToString"
+}
+
+type CacheBodyToStringKeyType string
+
+const CacheBodyToStringKey CacheBodyToStringKeyType = "CacheBodyToString"
+
+func SetCachedResponseToMetadata(metadata middleware.Metadata, v string) {
+	metadata.Set(CacheBodyToStringKey, v)
+}
+
+func GetCachedResponse(metadata middleware.Metadata) (string, error) {
+	v := metadata.Get(CacheBodyToStringKey)
+	switch typed := v.(type) {
+	case string:
+		return typed, nil
+	default:
+		return "", fmt.Errorf("unknown type: %T", typed)
+	}
+}
+
+func (m *CacheBodyToString) HandleDeserialize(
+	ctx context.Context, input middleware.DeserializeInput, next middleware.DeserializeHandler,
+) (
+	output middleware.DeserializeOutput, metadata middleware.Metadata, err error,
+) {
+	out, metadata, err := next.HandleDeserialize(ctx, input)
+	if err != nil {
+		return out, metadata, fmt.Errorf("error next.HandleDeserialize %w", err)
+	}
+
+	ok := dto.CacheResponseToStringFromContext(ctx)
+	if ok {
+		resp, ok := out.RawResponse.(*smithyhttp.Response)
+		if !ok {
+			return out, metadata, fmt.Errorf("unknown response type %T", resp)
+		}
+		origBody := resp.Body
+		defer origBody.Close()
+
+		bb, err := io.ReadAll(origBody)
+		if err != nil {
+			return out, metadata, fmt.Errorf("error reading response %w", err)
+		}
+
+		strbb := string(bb)
+
+		SetCachedResponseToMetadata(metadata, strbb)
+
+		resp.Body = io.NopCloser(bytes.NewReader(bb))
+	}
+
+	return out, metadata, err
 }
 
 func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filenameChatPrefix string) {
@@ -100,24 +165,32 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	srv.lgr.WithTracing(c).Infof("Checking for missing previews and converted")
 	var continuationToken *string
 	for {
-		cr := dto.ContextWithRequestUserMetadata(c, true)
-		lst, err := srv.awsS3.ListObjectsV2(cr, &s3.ListObjectsV2Input{
+		cr := dto.ContextWithRequestUserMetadata(c)
+		crr := dto.ContextWithCacheResponseToString(cr)
+		lst, err := srv.awsS3.ListObjectsV2(crr, &s3.ListObjectsV2Input{
 			Bucket:            &srv.minioBucketsConfig.Files,
 			Prefix:            &filenameChatPrefix,
 			ContinuationToken: continuationToken,
+			MaxKeys:           new(int32(maxFilesInBatch)),
 		}, func(o *s3.Options) {
-			// see all mws here /home/nkonev/go/pkg/mod/github.com/aws/smithy-go@v1.28.6/middleware/stack.go :: Stack
-			o.APIOptions = append(o.APIOptions, AddRequestUserMetadataMiddleware)
+			// see all middlewares here /home/nkonev/go/pkg/mod/github.com/aws/smithy-go@v1.28.6/middleware/stack.go :: Stack
+			o.APIOptions = append(o.APIOptions, AddRequestUserMetadataMiddleware, AddCacheBodyToStringMiddleware)
 		})
 		if err != nil {
 			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
 			break
 		}
-		// rr := GetRawResponse(lst.ResultMetadata).(*smithyhttp.Response)
+		//rr :=awsmiddleware.GetRawResponse(lst.ResultMetadata).(*smithyhttp.Response)
 		// defer rr.Body.Close()
 		// bb, err := io.ReadAll(rr.Body)
 		// bbs := string(bb)
 		// println(bbs)
+		rr, err := GetCachedResponse(lst.ResultMetadata)
+		if err != nil {
+			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
+			break
+		}
+		println(rr)
 
 		continuationToken = lst.NextContinuationToken
 
@@ -151,6 +224,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 					srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", keyOfConverted, err)
 					continue
 				}
+				// TODO rustfs restore isMessageRecording here
 				if !convertedExists && utils.IsVideo(aKey) && !utils.IsConverted(aKey) && !isConverting {
 					// get metadata
 					mdt, err := srv.awsS3.HeadObject(c, &s3.HeadObjectInput{
@@ -181,10 +255,10 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 					srv.previewService.CreatePreview(c, aKey)
 				}
 			}
+		}
 
-			if len(lst.Contents) < maxFilesInBatch {
-				break
-			}
+		if len(lst.Contents) < maxFilesInBatch {
+			break
 		}
 	}
 	srv.lgr.WithTracing(c).Infof("Checking for missing previews and converted finished")
