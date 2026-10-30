@@ -2,9 +2,13 @@ package tasks
 
 import (
 	"context"
+	"io"
 	"time"
 
+	smithymiddleware "github.com/aws/smithy-go/middleware"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/minio/minio-go/v7"
 	"github.com/nkonev/dcron"
 	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
@@ -57,6 +61,38 @@ func (srv *ActualizeGeneratedFilesService) doJob(ctx context.Context) {
 	srv.processFiles(ctx, filenameChatPrefix)
 }
 
+// rawResponseKey is the accessor key used to store and access the
+// raw response within the response metadata.
+type rawResponseKey struct{}
+
+// AddRawResponseString middleware adds raw response on to the metadata
+type AddRawResponseString struct{}
+
+// ID the identifier for the ClientRequestID
+func (m *AddRawResponseString) ID() string {
+	return "AddRawResponseStringToMetadata"
+}
+
+// HandleDeserialize adds raw response on the middleware metadata
+func (m AddRawResponseString) HandleDeserialize(ctx context.Context, in smithymiddleware.DeserializeInput, next smithymiddleware.DeserializeHandler) (
+	out smithymiddleware.DeserializeOutput, metadata smithymiddleware.Metadata, err error,
+) {
+	out, metadata, err = next.HandleDeserialize(ctx, in)
+	metadata.Set(rawResponseKey{}, out.RawResponse)
+	return out, metadata, err
+}
+
+// AddRawResponseToMetadata adds middleware to the middleware stack that
+// store raw response on to the metadata.
+func AddRawResponseToMetadata(stack *smithymiddleware.Stack) error {
+	return stack.Deserialize.Add(&AddRawResponseString{}, smithymiddleware.Before)
+}
+
+// GetRawResponse returns raw response set on metadata
+func GetRawResponse(metadata smithymiddleware.Metadata) interface{} {
+	return metadata.Get(rawResponseKey{})
+}
+
 func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filenameChatPrefix string) {
 	srv.lgr.WithTracing(c).Infof("Starting actualize generated files job")
 
@@ -71,11 +107,19 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			Bucket:            &srv.minioBucketsConfig.Files,
 			Prefix:            &filenameChatPrefix,
 			ContinuationToken: continuationToken,
+		}, func(o *s3.Options) {
+			o.APIOptions = append(o.APIOptions, AddRawResponseToMetadata)
 		})
 		if err != nil {
 			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
 			break
 		}
+		rr := GetRawResponse(lst.ResultMetadata).(*smithyhttp.Response)
+		defer rr.Body.Close()
+		bb, err := io.ReadAll(rr.Body)
+		bbs := string(bb)
+		println(bbs)
+
 		continuationToken = lst.NextContinuationToken
 
 		for _, fileOjInfo := range lst.Contents {
