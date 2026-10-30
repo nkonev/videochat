@@ -2,12 +2,11 @@ package tasks
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"time"
 
-	smithymiddleware "github.com/aws/smithy-go/middleware"
-
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/minio/minio-go/v7"
 	"github.com/nkonev/dcron"
@@ -17,6 +16,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/storage/client"
+	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
@@ -61,36 +61,33 @@ func (srv *ActualizeGeneratedFilesService) doJob(ctx context.Context) {
 	srv.processFiles(ctx, filenameChatPrefix)
 }
 
-// rawResponseKey is the accessor key used to store and access the
-// raw response within the response metadata.
-type rawResponseKey struct{}
-
-// AddRawResponseString middleware adds raw response on to the metadata
-type AddRawResponseString struct{}
-
-// ID the identifier for the ClientRequestID
-func (m *AddRawResponseString) ID() string {
-	return "AddRawResponseStringToMetadata"
+type RequestUserMetadata struct {
 }
 
-// HandleDeserialize adds raw response on the middleware metadata
-func (m AddRawResponseString) HandleDeserialize(ctx context.Context, in smithymiddleware.DeserializeInput, next smithymiddleware.DeserializeHandler) (
-	out smithymiddleware.DeserializeOutput, metadata smithymiddleware.Metadata, err error,
+func AddRequestUserMetadataMiddleware(stack *middleware.Stack) error {
+	return stack.Build.Add(&RequestUserMetadata{}, middleware.After)
+}
+
+func (m *RequestUserMetadata) ID() string { return "RequestUserMetadata" }
+
+func (m *RequestUserMetadata) HandleBuild(
+	ctx context.Context, in middleware.BuildInput, next middleware.BuildHandler,
+) (
+	out middleware.BuildOutput, metadata middleware.Metadata, err error,
 ) {
-	out, metadata, err = next.HandleDeserialize(ctx, in)
-	metadata.Set(rawResponseKey{}, out.RawResponse)
-	return out, metadata, err
-}
+	req, ok := in.Request.(*smithyhttp.Request)
+	if !ok {
+		return out, metadata, fmt.Errorf("unknown request type %T", req)
+	}
 
-// AddRawResponseToMetadata adds middleware to the middleware stack that
-// store raw response on to the metadata.
-func AddRawResponseToMetadata(stack *smithymiddleware.Stack) error {
-	return stack.Deserialize.Add(&AddRawResponseString{}, smithymiddleware.Before)
-}
+	rumd, ok := dto.RequestUserMetadataFromContext(ctx)
+	if ok && rumd {
+		q := req.URL.Query()
+		q.Set("metadata", "true")
+		req.URL.RawQuery = q.Encode()
+	}
 
-// GetRawResponse returns raw response set on metadata
-func GetRawResponse(metadata smithymiddleware.Metadata) interface{} {
-	return metadata.Get(rawResponseKey{})
+	return next.HandleBuild(ctx, in)
 }
 
 func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filenameChatPrefix string) {
@@ -103,22 +100,24 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	srv.lgr.WithTracing(c).Infof("Checking for missing previews and converted")
 	var continuationToken *string
 	for {
-		lst, err := srv.awsS3.ListObjectsV2(c, &s3.ListObjectsV2Input{
+		cr := dto.ContextWithRequestUserMetadata(c, true)
+		lst, err := srv.awsS3.ListObjectsV2(cr, &s3.ListObjectsV2Input{
 			Bucket:            &srv.minioBucketsConfig.Files,
 			Prefix:            &filenameChatPrefix,
 			ContinuationToken: continuationToken,
 		}, func(o *s3.Options) {
-			o.APIOptions = append(o.APIOptions, AddRawResponseToMetadata)
+			// see all mws here /home/nkonev/go/pkg/mod/github.com/aws/smithy-go@v1.28.6/middleware/stack.go :: Stack
+			o.APIOptions = append(o.APIOptions, AddRequestUserMetadataMiddleware)
 		})
 		if err != nil {
 			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
 			break
 		}
-		rr := GetRawResponse(lst.ResultMetadata).(*smithyhttp.Response)
-		defer rr.Body.Close()
-		bb, err := io.ReadAll(rr.Body)
-		bbs := string(bb)
-		println(bbs)
+		// rr := GetRawResponse(lst.ResultMetadata).(*smithyhttp.Response)
+		// defer rr.Body.Close()
+		// bb, err := io.ReadAll(rr.Body)
+		// bbs := string(bb)
+		// println(bbs)
 
 		continuationToken = lst.NextContinuationToken
 
