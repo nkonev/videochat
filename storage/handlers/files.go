@@ -837,7 +837,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during iterating over objects fy prefix %v: %v", prefix, err)
 				return c.NoContent(http.StatusInternalServerError)
 			}
-			continuationToken = res.ContinuationToken
+			continuationToken = res.NextContinuationToken
 
 			objs := []types.ObjectIdentifier{}
 			for _, v := range res.Contents {
