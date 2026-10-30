@@ -14,6 +14,10 @@ type ctxKeyRequestUserMetadataType string
 
 const ctxKeyRequestUserMetadata ctxKeyRequestUserMetadataType = "ctxKeyRequestUserMetadata"
 
+type ctxKeyCacheResponseToStringType string
+
+const ctxKeyCacheResponseToString ctxKeyCacheResponseToStringType = "ctxKeyCacheResponseToString"
+
 func ContextWithUpploadId(ctx context.Context, v string) context.Context {
 	return context.WithValue(ctx, ctxKeyUpploadId, v)
 }
@@ -22,8 +26,12 @@ func ContextWithPartNumber(ctx context.Context, v string) context.Context {
 	return context.WithValue(ctx, ctxKeyPartNumber, v)
 }
 
-func ContextWithRequestUserMetadata(ctx context.Context, v bool) context.Context {
-	return context.WithValue(ctx, ctxKeyRequestUserMetadata, v)
+func ContextWithRequestUserMetadata(ctx context.Context) context.Context {
+	return context.WithValue(ctx, ctxKeyRequestUserMetadata, true)
+}
+
+func ContextWithCacheResponseToString(ctx context.Context) context.Context {
+	return context.WithValue(ctx, ctxKeyCacheResponseToString, true)
 }
 
 func UpploadIdFromContext(ctx context.Context) (string, bool) {
@@ -36,7 +44,12 @@ func PartNumberFromContext(ctx context.Context) (string, bool) {
 	return user, ok
 }
 
-func RequestUserMetadataFromContext(ctx context.Context) (bool, bool) {
+func RequestUserMetadataFromContext(ctx context.Context) bool {
 	r, ok := ctx.Value(ctxKeyRequestUserMetadata).(bool)
-	return r, ok
+	return r && ok
+}
+
+func CacheResponseToStringFromContext(ctx context.Context) bool {
+	r, ok := ctx.Value(ctxKeyCacheResponseToString).(bool)
+	return r && ok
 }
