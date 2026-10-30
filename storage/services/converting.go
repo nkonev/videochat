@@ -128,13 +128,20 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 	}
 	defer convertedFile.Close()
 
+	st, err := convertedFile.Stat()
+	if err != nil {
+		s.lgr.WithTracing(ctx).Errorf("Error during stat file '%v': %v", pathOfConvertedFile, err)
+		return
+	}
+
 	// put recording_123_converted.webm to minio
 	_, err = s.awsS3.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:      &s.minioConfig.Files,
-		Key:         &convertedKey,
-		Body:        convertedFile,
-		ContentType: new(utils.ConvertedContentType),
-		Metadata:    objectInfo.Metadata,
+		Bucket:        &s.minioConfig.Files,
+		Key:           &convertedKey,
+		Body:          convertedFile,
+		ContentType:   new(utils.ConvertedContentType),
+		ContentLength: new(st.Size()),
+		Metadata:      objectInfo.Metadata,
 	})
 	if err != nil {
 		s.lgr.WithTracing(ctx).Errorf("Error during storing to minio %v: %v", pathOfConvertedFile, err)
