@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/minio/minio-go/v7"
 	"github.com/nkonev/dcron"
 	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
@@ -41,6 +42,7 @@ func ActualizeGeneratedFilesScheduler(
 }
 
 type ActualizeGeneratedFilesService struct {
+	awsS3              *client.S3Wrapper
 	minioClient        *client.InternalMinioClient
 	minioBucketsConfig *utils.MinioConfig
 	previewService     *services.PreviewService
@@ -58,66 +60,92 @@ func (srv *ActualizeGeneratedFilesService) doJob(ctx context.Context) {
 func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filenameChatPrefix string) {
 	srv.lgr.WithTracing(c).Infof("Starting actualize generated files job")
 
+	maxFilesInBatch := viper.GetInt("schedulers.actualizeGeneratedFilesTask.batch")
+
 	// create preview for files if need
 	// and create _converted.webm
 	srv.lgr.WithTracing(c).Infof("Checking for missing previews and converted")
-	var fileObjects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-		WithMetadata: true,
-	})
-	for fileOjInfo := range fileObjects {
-		// here in minio 'chat/108/'
-		srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v'", fileOjInfo.Key)
-		if utils.IsVideo(fileOjInfo.Key) {
-			// preview
-			previewToCheck := utils.SetVideoPreviewExtension(fileOjInfo.Key)
+	var continuationToken *string
+	for {
+		lst, err := srv.awsS3.ListObjectsV2(c, &s3.ListObjectsV2Input{
+			Bucket:            &srv.minioBucketsConfig.Files,
+			Prefix:            &filenameChatPrefix,
+			ContinuationToken: continuationToken,
+		})
+		if err != nil {
+			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
+			break
+		}
+		continuationToken = lst.NextContinuationToken
 
-			previewExists, _, err := srv.minioClient.FileExists(c, srv.minioBucketsConfig.FilesPreview, previewToCheck)
-			if err != nil {
-				srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", previewToCheck, err)
-				continue
-			}
-			if !previewExists {
-				srv.lgr.WithTracing(c).Infof("Create missed preview %v for %v", previewToCheck, fileOjInfo.Key)
-				srv.previewService.CreatePreview(c, fileOjInfo.Key)
+		for _, fileOjInfo := range lst.Contents {
+			// here in minio 'chat/108/'
+			aKey := *fileOjInfo.Key
+			srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v'", aKey)
+			if utils.IsVideo(aKey) {
+				// preview
+				previewToCheck := utils.SetVideoPreviewExtension(aKey)
+
+				previewExists, _, err := srv.awsS3.FileExists(c, srv.minioBucketsConfig.FilesPreview, previewToCheck)
+				if err != nil {
+					srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", previewToCheck, err)
+					continue
+				}
+				if !previewExists {
+					srv.lgr.WithTracing(c).Infof("Create missed preview %v for %v", previewToCheck, aKey)
+					srv.previewService.CreatePreview(c, aKey)
+				}
+
+				isConverting, err := srv.redisInfoService.GetOriginalConverting(c, aKey)
+				if err != nil {
+					srv.lgr.WithTracing(c).Errorf("Unable to isConverting for key %v from redis: %v", aKey, err)
+					continue
+				}
+
+				keyOfConverted := utils.GetKeyForConverted(aKey)
+				convertedExists, _, err := srv.awsS3.FileExists(c, srv.minioBucketsConfig.Files, keyOfConverted)
+				if err != nil {
+					srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", keyOfConverted, err)
+					continue
+				}
+				if !convertedExists && utils.IsVideo(aKey) && !utils.IsConverted(aKey) && !isConverting {
+					// get metadata
+					mdt, err := srv.awsS3.HeadObject(c, &s3.HeadObjectInput{
+						Bucket: &srv.minioBucketsConfig.Files,
+						Key:    &aKey,
+					})
+					if err != nil {
+						srv.lgr.WithTracing(c).Errorf("Unable to get metadata of %v: %v", aKey, err)
+						continue
+					}
+
+					// produce _converted.webm for message recording
+					isMessageRecording := utils.GetBoolean(mdt.Metadata[services.MessageRecordingKey()])
+					if isMessageRecording {
+						srv.lgr.WithTracing(c).Infof("Create missed converted for %v", aKey)
+						srv.convertingService.Convert(c, aKey)
+					}
+				}
+			} else if utils.IsImage(aKey) {
+				previewToCheck := utils.SetImagePreviewExtension(aKey)
+				exists, _, err := srv.awsS3.FileExists(c, srv.minioBucketsConfig.FilesPreview, previewToCheck)
+				if err != nil {
+					srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", previewToCheck, err)
+					continue
+				}
+				if !exists {
+					srv.lgr.WithTracing(c).Infof("Create preview for missing %v", aKey)
+					srv.previewService.CreatePreview(c, aKey)
+				}
 			}
 
-			// _converted.webm
-			isMessageRecordingStr := fileOjInfo.UserMetadata[services.MessageRecordingKey()]
-			isMessageRecording := utils.GetBoolean(isMessageRecordingStr)
-
-			isConverting, err := srv.redisInfoService.GetOriginalConverting(c, fileOjInfo.Key)
-			if err != nil {
-				srv.lgr.WithTracing(c).Errorf("Unable to isConverting for key %v from redis: %v", fileOjInfo.Key, err)
-				continue
-			}
-
-			keyOfConverted := utils.GetKeyForConverted(fileOjInfo.Key)
-			convertedExists, _, err := srv.minioClient.FileExists(c, srv.minioBucketsConfig.Files, keyOfConverted)
-			if err != nil {
-				srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", keyOfConverted, err)
-				continue
-			}
-			if !convertedExists && utils.IsVideo(fileOjInfo.Key) && isMessageRecording && !utils.IsConverted(fileOjInfo.Key) && !isConverting {
-				srv.lgr.WithTracing(c).Infof("Create missed converted for %v", fileOjInfo.Key)
-				srv.convertingService.Convert(c, fileOjInfo.Key)
-			}
-		} else if utils.IsImage(fileOjInfo.Key) {
-			previewToCheck := utils.SetImagePreviewExtension(fileOjInfo.Key)
-			exists, _, err := srv.minioClient.FileExists(c, srv.minioBucketsConfig.FilesPreview, previewToCheck)
-			if err != nil {
-				srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", previewToCheck, err)
-				continue
-			}
-			if !exists {
-				srv.lgr.WithTracing(c).Infof("Create preview for missing %v", fileOjInfo.Key)
-				srv.previewService.CreatePreview(c, fileOjInfo.Key)
+			if len(lst.Contents) < maxFilesInBatch {
+				break
 			}
 		}
-
 	}
 	srv.lgr.WithTracing(c).Infof("Checking for missing previews and converted finished")
+	continuationToken = nil
 
 	// remove previews of removed files
 	srv.lgr.WithTracing(c).Infof("Checking for excess previews")
@@ -133,7 +161,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			srv.lgr.WithTracing(c).Debugf("There is no original key, it's an old entry, skipping")
 			continue
 		}
-		exists, _, err := srv.minioClient.FileExists(c, srv.minioBucketsConfig.Files, originalKey)
+		exists, _, err := srv.awsS3.FileExists(c, srv.minioBucketsConfig.Files, originalKey)
 		if err != nil {
 			srv.lgr.WithTracing(c).Errorf("Unable to get exists for %v: %v", originalKey, err)
 			continue
@@ -160,9 +188,10 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	srv.lgr.WithTracing(c).Infof("End of generated files job")
 }
 
-func NewActualizeGeneratedFilesService(lgr *logger.Logger, minioClient *client.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {
+func NewActualizeGeneratedFilesService(awsS3 *client.S3Wrapper, lgr *logger.Logger, minioClient *client.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {
 	trcr := otel.Tracer("scheduler/actualize-generated-files")
 	return &ActualizeGeneratedFilesService{
+		awsS3:              awsS3,
 		lgr:                lgr,
 		minioClient:        minioClient,
 		minioBucketsConfig: minioBucketsConfig,

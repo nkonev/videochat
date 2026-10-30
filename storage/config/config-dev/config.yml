@@ -116,6 +116,7 @@ schedulers:
     enabled: false
     cron: "0 * * * * *"
     expiration: "30m"
+    batch: 1000
   actualizeMetadataCacheTask:
     # TODO rustfs
     enabled: false
