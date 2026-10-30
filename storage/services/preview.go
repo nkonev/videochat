@@ -11,7 +11,7 @@ import (
 	"os/exec"
 	"syscall"
 
-	"github.com/minio/minio-go/v7"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/siyouyun-open/imaging"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/client"
@@ -22,16 +22,16 @@ import (
 )
 
 type PreviewService struct {
-	minio                       *client.InternalMinioClient
+	awsS3                       *client.S3Wrapper
 	minioConfig                 *utils.MinioConfig
 	rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher
 	filesService                *FilesService
 	lgr                         *logger.Logger
 }
 
-func NewPreviewService(lgr *logger.Logger, minio *client.InternalMinioClient, minioConfig *utils.MinioConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
+func NewPreviewService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioConfig *utils.MinioConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
 	return &PreviewService{
-		minio:                       minio,
+		awsS3:                       awsS3,
 		minioConfig:                 minioConfig,
 		rabbitFileUploadedPublisher: rabbitFileUploadedPublisher,
 		filesService:                filesService,
@@ -45,12 +45,12 @@ func (s *PreviewService) HandleMinioEvent(ctx context.Context, data *dto.MinioEv
 
 	if utils.IsVideo(normalizedKey) {
 		// save byteBuffer for the original
-		theBytes, err := s.createVideoPreview(ctx, normalizedKey)
+		byteBuffer, err := s.createVideoPreview(ctx, normalizedKey)
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during creating video preview %v for %v", err, normalizedKey)
 			return nil
 		}
-		byteBuffer := bytes.NewBuffer(*theBytes)
+
 		err = s.saveVideoPreviewToMinio(ctx, normalizedKey, byteBuffer)
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during storing video thumbnail %v for %v", err, normalizedKey)
@@ -60,8 +60,13 @@ func (s *PreviewService) HandleMinioEvent(ctx context.Context, data *dto.MinioEv
 		// save byteBuffer as of convertedVideoKey - as of (yet not existed _converted.webm) _converted.jpg
 		if shouldSavePreviewForConverted {
 			convertedVideoKey := utils.GetKeyForConverted(normalizedKey)
-			byteBuffer2 := bytes.NewBuffer(*theBytes)
-			err = s.saveVideoPreviewToMinio(ctx, convertedVideoKey, byteBuffer2)
+			_, err = byteBuffer.Seek(0, io.SeekStart)
+			if err != nil {
+				s.lgr.WithTracing(ctx).Errorf("Error during seeking to the start converted video thumbnail %v for %v", err, normalizedKey)
+				return nil
+			}
+
+			err = s.saveVideoPreviewToMinio(ctx, convertedVideoKey, byteBuffer)
 			if err != nil {
 				s.lgr.WithTracing(ctx).Errorf("Error during storing converted video thumbnail %v for %v", err, normalizedKey)
 				return nil
@@ -108,14 +113,17 @@ func (s *PreviewService) SendToParticipants(ctx context.Context, data *dto.Minio
 
 func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string) {
 	if utils.IsImage(normalizedKey) {
-		object, err := s.minio.GetObject(ctx, s.minioConfig.Files, normalizedKey, minio.GetObjectOptions{})
+		object, err := s.awsS3.GetObject(ctx, &s3.GetObjectInput{
+			Bucket: &s.minioConfig.Files,
+			Key:    &normalizedKey,
+		})
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during getting image file %v for %v", err, normalizedKey)
 			return
 		}
-		defer object.Close()
+		defer object.Body.Close()
 
-		byteBuffer, err := s.resizeImageToJpg(ctx, object)
+		byteBuffer, err := s.resizeImageToJpg(ctx, object.Body)
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during resizing image %v for %v", err, normalizedKey)
 			return
@@ -124,19 +132,25 @@ func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string
 		newKey := utils.SetImagePreviewExtension(normalizedKey)
 
 		var objectSize int64 = int64(byteBuffer.Len())
-		_, err = s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg", UserMetadata: SerializeOriginalKeyToMetadata(normalizedKey)})
+
+		_, err = s.awsS3.PutObject(ctx, &s3.PutObjectInput{
+			Bucket:        &s.minioConfig.FilesPreview,
+			Key:           &newKey,
+			Body:          byteBuffer,
+			ContentLength: &objectSize,
+			ContentType:   new(utils.PreviewContentType),
+			Metadata:      SerializeOriginalKeyToMetadata(normalizedKey),
+		})
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during storing image thumbnail %v for %v", err, normalizedKey)
 			return
 		}
 	} else if utils.IsVideo(normalizedKey) {
-		theBytes, err := s.createVideoPreview(ctx, normalizedKey)
+		byteBuffer, err := s.createVideoPreview(ctx, normalizedKey)
 		if err != nil {
 			s.lgr.WithTracing(ctx).Errorf("Error during creating video preview %v for %v", err, normalizedKey)
 			return
 		}
-
-		byteBuffer := bytes.NewBuffer(*theBytes)
 
 		err = s.saveVideoPreviewToMinio(ctx, normalizedKey, byteBuffer)
 		if err != nil {
@@ -147,7 +161,7 @@ func (s *PreviewService) CreatePreview(ctx context.Context, normalizedKey string
 	return
 }
 
-func (s *PreviewService) resizeImageToJpg(ctx context.Context, reader io.Reader) (*bytes.Buffer, error) {
+func (s *PreviewService) resizeImageToJpg(ctx context.Context, reader io.Reader) (*bytes.Reader, error) {
 	srcImage, _, err := image.Decode(reader)
 	if err != nil {
 		s.lgr.WithTracing(ctx).Errorf("Error during decoding image: %v", err)
@@ -160,17 +174,29 @@ func (s *PreviewService) resizeImageToJpg(ctx context.Context, reader io.Reader)
 		s.lgr.WithTracing(ctx).Errorf("Error during encoding image: %v", err)
 		return nil, err
 	}
-	return byteBuffer, nil
+
+	return bytes.NewReader(byteBuffer.Bytes()), nil
 }
 
-func (s *PreviewService) createVideoPreview(ctx context.Context, normalizedKey string) (*[]byte, error) {
+func (s *PreviewService) createVideoPreview(ctx context.Context, normalizedKey string) (*bytes.Reader, error) {
 	d := viper.GetDuration("preview.presignedDuration")
-	presignedUrl, err := s.minio.PresignedGetObject(ctx, s.minioConfig.Files, normalizedKey, d, url.Values{})
+
+	pres, err := s.awsS3.PresignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: &s.minioConfig.Files,
+		Key:    &normalizedKey,
+	}, s3.WithPresignExpires(d))
 	if err != nil {
 		s.lgr.WithTracing(ctx).Errorf("Error during getting presigned url for %v", normalizedKey)
 		return nil, err
 	}
-	stringPresingedUrl := presignedUrl.String()
+
+	u, err := url.Parse(pres.URL)
+	if err != nil {
+		s.lgr.WithTracing(ctx).Errorf("Error during parsing presigned put url %v", err)
+		return nil, err
+	}
+
+	stringPresingedUrl := u.String()
 
 	ffCmd := exec.Command(viper.GetString("preview.ffmpegPath"),
 		"-i", stringPresingedUrl, "-vf", "thumbnail", "-frames:v", "1",
@@ -198,16 +224,23 @@ func (s *PreviewService) createVideoPreview(ctx context.Context, normalizedKey s
 		s.lgr.WithTracing(ctx).Errorf("Error during resizing image %v for %v", err, normalizedKey)
 		return nil, err
 	}
-	theBytes := byteBuffer.Bytes()
-	return &theBytes, nil
+	return byteBuffer, nil
 }
 
-func (s *PreviewService) saveVideoPreviewToMinio(ctx context.Context, normalizedKey string, byteBuffer *bytes.Buffer) error {
+func (s *PreviewService) saveVideoPreviewToMinio(ctx context.Context, normalizedKey string, byteBuffer *bytes.Reader) error {
 	newKey := utils.SetVideoPreviewExtension(normalizedKey)
 
 	var objectSize int64 = int64(byteBuffer.Len())
 
-	_, err := s.minio.PutObject(ctx, s.minioConfig.FilesPreview, newKey, byteBuffer, objectSize, minio.PutObjectOptions{ContentType: "image/jpg", UserMetadata: SerializeOriginalKeyToMetadata(normalizedKey)})
+	_, err := s.awsS3.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:        &s.minioConfig.FilesPreview,
+		Key:           &newKey,
+		Body:          byteBuffer,
+		ContentType:   new(utils.PreviewContentType),
+		ContentLength: &objectSize,
+		Metadata:      SerializeOriginalKeyToMetadata(normalizedKey),
+	})
+
 	return err
 }
 

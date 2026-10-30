@@ -25,6 +25,7 @@ const MessageIdNonExistent = -1
 const converted = "converted"
 const underscoreConverted = "_" + converted
 const ConvertedContentType = "video/webm"
+const PreviewContentType = "image/jpg"
 
 const GeneralMaxFilenameLength = 255                    // this allows filesystem
 const MaxFilenameLength = GeneralMaxFilenameLength - 32 // =223. reserve 32 symbols for things like "_converted"
