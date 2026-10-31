@@ -8,8 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/minio/minio-go/v7"
-	minioCredentials "github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/nkonev/dcron"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
@@ -55,7 +53,6 @@ func main() {
 		}),
 		fx.Provide(
 			configureTracer,
-			configureInternalMinio,
 			client.ConfigureAwsS3v2,
 			configureMinioEntities,
 			configureEcho,
@@ -236,26 +233,6 @@ func configureEcho(
 	})
 
 	return e
-}
-
-func configureInternalMinio() (*client.InternalMinioClient, error) {
-	endpoint := viper.GetString("minio.internalEndpointMinio")
-	accessKeyID := viper.GetString("minio.accessKeyId")
-	secretAccessKey := viper.GetString("minio.secretAccessKey")
-	location := viper.GetString("minio.location")
-	secured := viper.GetBool("minio.secured")
-
-	// Initialize minio client object.
-	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  minioCredentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: secured,
-		Region: location,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &client.InternalMinioClient{minioClient}, nil
 }
 
 func configureTracer(lgr *logger.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
