@@ -4,8 +4,7 @@ server:
   body.limit: "100G"
 
 logger:
-  # TODO rustfs
-  level: debug
+  level: info
   dir: "log"
   filename: "file.log"
   writeToFile: true
