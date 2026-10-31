@@ -197,10 +197,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	presignedUrls := []PresignedUrl{}
 	for i := 1; i <= chunksNum; i++ {
-		ctx := c.Request().Context()
-
-		// multipart upload proxying 1/6
-		presReq, err := h.awsS3.PresignPutObjectProxyable(ctx, &s3.PutObjectInput{
+		presReq, err := h.awsS3.PresignPutObjectProxyable(c.Request().Context(), &s3.PutObjectInput{
 			Bucket: &bucketName,
 			Key:    &aKey,
 		}, *upload.UploadId, utils.IntToString(i), s3.WithPresignExpires(uploadDuration))
