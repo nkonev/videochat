@@ -77,7 +77,7 @@ func (s *ConvertingService) Convert(ctx context.Context, normalizedKey string) {
 		Key:    &normalizedKey,
 	}, s3.WithPresignExpires(d))
 	if err != nil {
-		s.lgr.WithTracing(ctx).Errorf("Error during getting presigned url for %v", normalizedKey)
+		s.lgr.WithTracing(ctx).Errorf("Error during getting presigned url for %v: %v", normalizedKey, err)
 		return
 	}
 
