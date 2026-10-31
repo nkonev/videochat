@@ -108,9 +108,9 @@ schedulers:
     # TODO rustfs
     enabled: false
     cron: "0 * * * * *"
-    batchChats: 20
     expiration: "30m"
     chatCount: 100
+    batch: 1000
   actualizeGeneratedFilesTask:
     # TODO rustfs
     enabled: false

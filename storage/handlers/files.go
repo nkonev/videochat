@@ -833,22 +833,24 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 			}
 			continuationToken = res.NextContinuationToken
 
-			objs := []types.ObjectIdentifier{}
+			objsToDelete := []types.ObjectIdentifier{}
 			for _, v := range res.Contents {
-				objs = append(objs, types.ObjectIdentifier{
+				objsToDelete = append(objsToDelete, types.ObjectIdentifier{
 					Key: v.Key,
 				})
 			}
 
-			_, err = h.awsS3.DeleteObjects(c.Request().Context(), &s3.DeleteObjectsInput{
-				Bucket: &bucketName,
-				Delete: &types.Delete{
-					Objects: objs,
-				},
-			})
-			if err != nil {
-				h.lgr.WithTracing(c.Request().Context()).Errorf("Error during iterating over objects fy prefix %v: %v", prefix, err)
-				return c.NoContent(http.StatusInternalServerError)
+			if len(objsToDelete) > 0 {
+				_, err = h.awsS3.DeleteObjects(c.Request().Context(), &s3.DeleteObjectsInput{
+					Bucket: &bucketName,
+					Delete: &types.Delete{
+						Objects: objsToDelete,
+					},
+				})
+				if err != nil {
+					h.lgr.WithTracing(c.Request().Context()).Errorf("Error during deleting objects: %v", err)
+					return c.NoContent(http.StatusInternalServerError)
+				}
 			}
 
 			if len(res.Contents) < maxFilesInBatch {
