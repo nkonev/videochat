@@ -114,7 +114,7 @@ schedulers:
   actualizeGeneratedFilesTask:
     # TODO rustfs
     enabled: true
-    cron: "*/30 * * * * *"
+    cron: "0 * * * * *"
     expiration: "30m"
     batch: 1000
   actualizeMetadataCacheTask:
