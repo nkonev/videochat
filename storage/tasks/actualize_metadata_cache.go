@@ -3,7 +3,7 @@ package tasks
 import (
 	"context"
 
-	"github.com/minio/minio-go/v7"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/nkonev/dcron"
 	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
 	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
@@ -42,7 +42,7 @@ func ActualizeMetadataCacheScheduler(
 }
 
 type ActualizeMetadataCacheService struct {
-	minioClient        *client.InternalMinioClient
+	awsS3              *client.S3Wrapper
 	minioBucketsConfig *utils.MinioConfig
 	dba                *db.DB
 	tracer             trace.Tracer
@@ -57,93 +57,126 @@ func (srv *ActualizeMetadataCacheService) doJob(ctx context.Context) {
 func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filenameChatPrefix string) {
 	srv.lgr.WithTracing(c).Infof("Starting actualize metadata cache job")
 
+	maxFilesInBatch := viper.GetInt("schedulers.actualizeMetadataCacheTask.batch")
+
 	// create metadata cache for files if need
 	srv.lgr.WithTracing(c).Infof("Checking for missing metadata cache items")
-	var initialFileObjects <-chan minio.ObjectInfo = srv.minioClient.ListObjects(c, srv.minioBucketsConfig.Files, minio.ListObjectsOptions{
-		Prefix:       filenameChatPrefix,
-		Recursive:    true,
-		WithMetadata: true,
-	})
-	for fileOjInfo := range initialFileObjects {
-		// here in minio 'chat/108/'
-		srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v'", fileOjInfo.Key)
-
-		chatId, err := utils.ParseChatId(fileOjInfo.Key)
+	var continuationToken *string
+	for {
+		lst, err := srv.awsS3.ListObjectsV2WithMetadataAndTags(c, &s3.ListObjectsV2Input{
+			Bucket:            &srv.minioBucketsConfig.Files,
+			ContinuationToken: continuationToken,
+			Prefix:            &filenameChatPrefix,
+			MaxKeys:           new(int32(maxFilesInBatch)),
+		})
 		if err != nil {
-			srv.lgr.WithTracing(c).Errorf("Unable to parse chatId for %v: %v", fileOjInfo.Key, err)
-			continue
+			srv.lgr.WithTracing(c).Errorf("Error list objects for actualizing metadata cache: %v", err)
+			break
 		}
-		fileItemUuid, err := utils.ParseFileItemUuid(fileOjInfo.Key)
-		if err != nil {
-			srv.lgr.WithTracing(c).Errorf("Unable to parse fileItemUuid for %v: %v", fileOjInfo.Key, err)
-			continue
-		}
-		filename, err := utils.ParseFileName(fileOjInfo.Key)
-		if err != nil {
-			srv.lgr.WithTracing(c).Errorf("Unable to parse filename for %v: %v", fileOjInfo.Key, err)
-			continue
-		}
+		continuationToken = lst.NextContinuationToken
 
-		mcid := dto.MetadataCacheId{
-			ChatId:       chatId,
-			FileItemUuid: fileItemUuid,
-			Filename:     filename,
-		}
-		metadataCache, err := db.Get(c, srv.dba, mcid, nil)
-		if err != nil {
-			srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", mcid.String(), err)
-			continue
-		}
-
-		if metadataCache == nil {
-			srv.lgr.WithTracing(c).Infof("Create metadata cache item for missing %v", fileOjInfo.Key)
-
-			// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
-			ownerId, correlationId, timestamp, err := srv.tryGetMetadata(c, fileOjInfo)
-			if err != nil {
-				srv.lgr.WithTracing(c).Errorf("Unable to get metadata for %v: %v", fileOjInfo.Key, err)
-
+		for i, fileOjInfo := range lst.Contents {
+			if fileOjInfo.Key == nil {
+				srv.lgr.WithTracing(c).Error("Nil key for idx '%v'", i)
 				continue
 			}
 
-			var correlationIdPtr *string
-			if len(correlationId) > 0 {
-				correlationIdPtr = &correlationId
-			}
+			aKey := *fileOjInfo.Key
 
-			eventTime := utils.GetEventTimeFromTimestamp(timestamp)
-
-			// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
-			published := srv.tryGetTags(c, fileOjInfo)
-
-			err = db.Set(c, srv.dba, dto.MetadataCache{
-				ChatId:         chatId,
-				FileItemUuid:   fileItemUuid,
-				Filename:       filename,
-				OwnerId:        ownerId,
-				CorrelationId:  correlationIdPtr,
-				Published:      published,
-				FileSize:       fileOjInfo.Size,
-				CreateDateTime: eventTime,
-				EditDateTime:   eventTime,
-			})
-			if err != nil {
-				srv.lgr.WithTracing(c).Errorf("Unable to create metadata cache for %v: %v", mcid.String(), err)
+			if fileOjInfo.Size == nil {
+				srv.lgr.WithTracing(c).Error("Nil Size for key '%v'", aKey)
 				continue
 			}
+
+			// here in minio 'chat/108/'
+
+			srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v'", aKey)
+
+			chatId, err := utils.ParseChatId(aKey)
+			if err != nil {
+				srv.lgr.WithTracing(c).Errorf("Unable to parse chatId for %v: %v", aKey, err)
+				continue
+			}
+			fileItemUuid, err := utils.ParseFileItemUuid(aKey)
+			if err != nil {
+				srv.lgr.WithTracing(c).Errorf("Unable to parse fileItemUuid for %v: %v", aKey, err)
+				continue
+			}
+			filename, err := utils.ParseFileName(aKey)
+			if err != nil {
+				srv.lgr.WithTracing(c).Errorf("Unable to parse filename for %v: %v", aKey, err)
+				continue
+			}
+
+			mcid := dto.MetadataCacheId{
+				ChatId:       chatId,
+				FileItemUuid: fileItemUuid,
+				Filename:     filename,
+			}
+			metadataCache, err := db.Get(c, srv.dba, mcid, nil)
+			if err != nil {
+				srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", mcid.String(), err)
+				continue
+			}
+
+			if metadataCache == nil {
+				srv.lgr.WithTracing(c).Infof("Create metadata cache item for missing %v", aKey)
+
+				// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
+				ownerId, correlationId, timestamp, err := srv.tryGetMetadata(c, fileOjInfo)
+				if err != nil {
+					srv.lgr.WithTracing(c).Errorf("Unable to get metadata for %v: %v", aKey, err)
+
+					continue
+				}
+
+				var correlationIdPtr *string
+				if len(correlationId) > 0 {
+					correlationIdPtr = &correlationId
+				}
+
+				eventTime := utils.GetEventTimeFromTimestamp(timestamp)
+
+				// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
+				published, correlationIdFromTags := srv.tryGetTags(c, fileOjInfo)
+
+				if correlationIdFromTags != nil {
+					correlationIdPtr = correlationIdFromTags
+				}
+
+				err = db.Set(c, srv.dba, dto.MetadataCache{
+					ChatId:         chatId,
+					FileItemUuid:   fileItemUuid,
+					Filename:       filename,
+					OwnerId:        ownerId,
+					CorrelationId:  correlationIdPtr,
+					Published:      published,
+					FileSize:       *fileOjInfo.Size,
+					CreateDateTime: eventTime,
+					EditDateTime:   eventTime,
+				})
+				if err != nil {
+					srv.lgr.WithTracing(c).Errorf("Unable to create metadata cache for %v: %v", mcid.String(), err)
+					continue
+				}
+			}
+			// we ignore the case when metadataCache differs from fileOjInfo
+			// because the checking would require get tags of each fileOjInfo
+			// it can be a performance slowdown
+			// tags -> published is the only thing which can differ, it will be synced when user press "[un]publish" button
 		}
-		// we ignore the case when metadataCache differs from fileOjInfo
-		// because the checking would require get tags of each fileOjInfo
-		// it can be a performance slowdown
-		// tags -> published is the only thing which can differ, it will be synced when user press "[un]publish" button
+
+		if len(lst.Contents) < maxFilesInBatch {
+			break
+		}
 	}
 	srv.lgr.WithTracing(c).Infof("Checking for missing metadata cache items finished")
 
 	// remove metadata cache of removed files
 	srv.lgr.WithTracing(c).Infof("Checking for excess metadata cache items")
+	// TODO rewrite with NewListPaginationKeyset()
 	offset := 0
 	for {
-		// TODO rustfs rewrite with NewListPaginationKeyset()
 		metadatas, err := db.GetList(c, srv.dba, dto.NoChatId, dto.NoFileItemUuid, nil, db.NewListPaginationOffset(utils.DefaultSize, offset), true)
 		if err != nil {
 			srv.lgr.WithTracing(c).Errorf("Error during paginate: %v", err)
@@ -154,7 +187,8 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 		for _, metadata := range metadatas {
 			aKey := utils.BuildNormalizedKey(&metadata)
 			srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v'", aKey)
-			exists, _, err := srv.minioClient.FileExists(c, srv.minioBucketsConfig.Files, aKey)
+			// TODO not very optimal
+			exists, _, err := srv.awsS3.FileExists(c, srv.minioBucketsConfig.Files, aKey)
 			if err != nil {
 				srv.lgr.WithTracing(c).Errorf("Unable to get exists for %v: %v", aKey, err)
 				continue
@@ -188,30 +222,24 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 	srv.lgr.WithTracing(c).Infof("End of actualize metadata cache job")
 }
 
-func (srv *ActualizeMetadataCacheService) tryGetTags(ctx context.Context, fileOjInfo minio.ObjectInfo) bool {
-	tags, err := srv.minioClient.GetObjectTagging(ctx, srv.minioBucketsConfig.Files, fileOjInfo.Key, minio.GetObjectTaggingOptions{})
+func (srv *ActualizeMetadataCacheService) tryGetTags(ctx context.Context, fileOjInfo dto.Object) (bool, *string) {
+	published, correlationId, err := services.DeserializeTags(fileOjInfo.UserTags)
 	if err != nil {
-		srv.lgr.WithTracing(ctx).Debugf("Unable to get tags for %v: %v", fileOjInfo.Key, err)
-		return false
+		srv.lgr.WithTracing(ctx).Errorf("Unable to deserialize tags for %v: %v", *fileOjInfo.Key, err)
+		return false, correlationId
 	}
 
-	published, _, err := services.DeserializeTags(tags.ToMap())
-	if err != nil {
-		srv.lgr.WithTracing(ctx).Errorf("Unable to deserialize tags for %v: %v", fileOjInfo.Key, err)
-		return false
-	}
-
-	return published
+	return published, correlationId
 }
 
-func (srv *ActualizeMetadataCacheService) tryGetMetadata(ctx context.Context, fileOjInfo minio.ObjectInfo) (int64, string, int64, error) {
+func (srv *ActualizeMetadataCacheService) tryGetMetadata(ctx context.Context, fileOjInfo dto.Object) (int64, string, int64, error) {
 	// metadata can be absent because of poor backup
 	ownerId, correlationId, timestamp, err := services.DeserializeMetadataFromMap(fileOjInfo.UserMetadata)
 	if err != nil {
 		fallbackUserId := viper.GetInt64("schedulers.actualizeMetadataCacheTask.fallbackOwnerId")
 
 		if fallbackUserId > 0 {
-			srv.lgr.WithTracing(ctx).Debugf("Unable to get metadata for %v: %v, going to fallback to user %v", fileOjInfo.Key, err, fallbackUserId)
+			srv.lgr.WithTracing(ctx).Debugf("Unable to get metadata for %v: %v, going to fallback to user %v", *fileOjInfo.Key, err, fallbackUserId)
 			ownerId = fallbackUserId
 		} else {
 			srv.lgr.WithTracing(ctx).Debugf("The fallbackOwnerId isn't configured, returning error")
@@ -223,11 +251,11 @@ func (srv *ActualizeMetadataCacheService) tryGetMetadata(ctx context.Context, fi
 	return ownerId, correlationId, timestamp, nil
 }
 
-func NewActualizeMetadataCacheService(lgr *logger.Logger, minioClient *client.InternalMinioClient, minioBucketsConfig *utils.MinioConfig, dba *db.DB) *ActualizeMetadataCacheService {
+func NewActualizeMetadataCacheService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioBucketsConfig *utils.MinioConfig, dba *db.DB) *ActualizeMetadataCacheService {
 	trcr := otel.Tracer("scheduler/actualize-metadata-cache")
 	return &ActualizeMetadataCacheService{
+		awsS3:              awsS3,
 		lgr:                lgr,
-		minioClient:        minioClient,
 		minioBucketsConfig: minioBucketsConfig,
 		dba:                dba,
 		tracer:             trcr,
