@@ -112,10 +112,8 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 
 				if !convertedExists && utils.IsVideo(aKey) && isMessageRecording && !utils.IsConverted(aKey) && !isConverting {
 					// produce _converted.webm for message recording
-					if isMessageRecording {
-						srv.lgr.WithTracing(c).Infof("Create missed converted for %v", aKey)
-						srv.convertingService.Convert(c, aKey)
-					}
+					srv.lgr.WithTracing(c).Infof("Create missed converted for %v", aKey)
+					srv.convertingService.Convert(c, aKey)
 				}
 			} else if utils.IsImage(aKey) {
 				previewToCheck := utils.SetImagePreviewExtension(aKey)
