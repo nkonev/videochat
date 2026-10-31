@@ -220,7 +220,7 @@ func ConfigureAwsS3v2(lgr *logger.Logger) (*S3Wrapper, error) {
 	})
 
 	sgn := v4.NewSigner(func(so *v4.SignerOptions) {
-		so.DisableURIPathEscaping = true // required, wrong signature otherwisw
+		so.DisableURIPathEscaping = true // required, wrong signature otherwise
 	})
 
 	sgnwr := &uploadParamsFromContextPresigner{
