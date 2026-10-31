@@ -316,7 +316,7 @@ func (c *S3Wrapper) ListObjectsV2WithMetadataAndTags(ctx context.Context, params
 
 	rr, err := GetBytesCachedResponse(lst.ResultMetadata)
 	if err != nil {
-		return nil, fmt.Errorf("Error list objects for checking for generated files: %w", err)
+		return nil, fmt.Errorf("Unable to get cached response: %w", err)
 	}
 
 	listBucketResult := dto.ListObjectsV2Output{}
