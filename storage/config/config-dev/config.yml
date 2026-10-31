@@ -48,8 +48,6 @@ otlp:
 
 minio:
   secured: false
-  # TODO rustfs remove
-  internalEndpointMinio: 127.0.0.1:39000
   internalEndpoint: http://127.0.0.1:39000
   interContainerUrl: http://minio:9000
   externalS3UrlPrefix: /api/s3
