@@ -107,7 +107,7 @@ func (m *RequestUserMetadata) HandleBuild(
 	return next.HandleBuild(ctx, in)
 }
 
-func AddCacheBodyToStringMiddleware(stack *middleware.Stack) error {
+func AddCacheBodyToSmthMiddleware(stack *middleware.Stack) error {
 	// /home/nkonev/go/pkg/mod/github.com/aws/aws-sdk-go-v2/service/s3@v1.114.5/internal/customizations/handle_200_error.go
 	return stack.Deserialize.Insert(&CacheBodyToSmth{}, "OperationDeserializer", middleware.After)
 }
@@ -210,9 +210,6 @@ func ConfigureAwsS3v2(lgr *logger.Logger) (*S3Wrapper, error) {
 
 	// build S3 client
 	s3client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		// see all middlewares here /home/nkonev/go/pkg/mod/github.com/aws/smithy-go@v1.28.6/middleware/stack.go :: Stack
-		o.APIOptions = append(o.APIOptions, AddRequestUserMetadataMiddleware, AddCacheBodyToStringMiddleware)
-
 		o.BaseEndpoint = &endpoint
 		// RustFS uses path-style URLs by default; virtual-host style requires RUSTFS_SERVER_DOMAINS
 		o.UsePathStyle = true
@@ -308,7 +305,11 @@ func (c *S3Wrapper) ListObjectsV2WithMetadataAndTags(ctx context.Context, params
 	ctx = dto.ContextWithRequestUserMetadata(ctx)
 	ctx = dto.ContextWithCacheResponseToBytes(ctx)
 
-	lst, err := c.Client.ListObjectsV2(ctx, params)
+	optFnsTo := []func(*s3.Options){}
+	optFnsTo = append(optFnsTo, s3.WithAPIOptions(AddCacheBodyToSmthMiddleware, AddRequestUserMetadataMiddleware))
+	optFnsTo = append(optFnsTo, optFns...)
+
+	lst, err := c.Client.ListObjectsV2(ctx, params, optFnsTo...)
 	if err != nil {
 		return nil, fmt.Errorf("Error list objects with metadata & tags: %w", err)
 	}

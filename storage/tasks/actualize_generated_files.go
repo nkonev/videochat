@@ -73,7 +73,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			MaxKeys:           new(int32(maxFilesInBatch)),
 		})
 		if err != nil {
-			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
+			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files: %v", err)
 			break
 		}
 		continuationToken1 = lst.NextContinuationToken
@@ -147,7 +147,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			MaxKeys:           new(int32(maxFilesInBatch)),
 		})
 		if err != nil {
-			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
+			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files: %v", err)
 			break
 		}
 		continuationToken2 = lst.NextContinuationToken
