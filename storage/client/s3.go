@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"context"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -121,17 +122,35 @@ type CacheBodyToStringKeyType string
 
 const CacheBodyToStringKey CacheBodyToStringKeyType = "CacheBodyToString"
 
-func SetCachedResponseToMetadata(metadata middleware.Metadata, v string) {
+func SetCachedResponseToStringToMetadata(metadata middleware.Metadata, v string) {
 	metadata.Set(CacheBodyToStringKey, v)
 }
 
-func GetCachedResponse(metadata middleware.Metadata) (string, error) {
+type CacheBodyToBytesKeyType string
+
+const CacheBodyToBytesKey CacheBodyToBytesKeyType = "CacheBodyToBytes"
+
+func SetCachedResponseToBytesToMetadata(metadata middleware.Metadata, v []byte) {
+	metadata.Set(CacheBodyToBytesKey, v)
+}
+
+func GetStringCachedResponse(metadata middleware.Metadata) (string, error) {
 	v := metadata.Get(CacheBodyToStringKey)
 	switch typed := v.(type) {
 	case string:
 		return typed, nil
 	default:
 		return "", fmt.Errorf("unknown type: %T", typed)
+	}
+}
+
+func GetBytesCachedResponse(metadata middleware.Metadata) ([]byte, error) {
+	v := metadata.Get(CacheBodyToBytesKey)
+	switch typed := v.(type) {
+	case []byte:
+		return typed, nil
+	default:
+		return nil, fmt.Errorf("unknown type: %T", typed)
 	}
 }
 
@@ -145,8 +164,9 @@ func (m *CacheBodyToString) HandleDeserialize(
 		return out, metadata, fmt.Errorf("error next.HandleDeserialize %w", err)
 	}
 
-	ok := dto.CacheResponseToStringFromContext(ctx)
-	if ok {
+	oks := dto.CacheResponseToStringFromContext(ctx)
+	okb := dto.CacheResponseToBytesFromContext(ctx)
+	if oks || okb {
 		resp, ok := out.RawResponse.(*smithyhttp.Response)
 		if !ok {
 			return out, metadata, fmt.Errorf("unknown response type %T", resp)
@@ -159,9 +179,13 @@ func (m *CacheBodyToString) HandleDeserialize(
 			return out, metadata, fmt.Errorf("error reading response %w", err)
 		}
 
-		strbb := string(bb)
-
-		SetCachedResponseToMetadata(metadata, strbb)
+		if oks {
+			strbb := string(bb)
+			SetCachedResponseToStringToMetadata(metadata, strbb)
+		}
+		if okb {
+			SetCachedResponseToBytesToMetadata(metadata, bb)
+		}
 
 		resp.Body = io.NopCloser(bytes.NewReader(bb))
 	}
@@ -278,4 +302,44 @@ func (c *S3Wrapper) EnsureBucket(ctx context.Context, bucketName string) error {
 
 	c.lgr.Infof("Successfully created bucket '%s'", bucketName)
 	return nil
+}
+
+func (c *S3Wrapper) ListObjectsV2WithMetadataAndTags(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*dto.ListObjectsV2Output, error) {
+	ctx = dto.ContextWithRequestUserMetadata(ctx)
+	ctx = dto.ContextWithCacheResponseToBytes(ctx)
+
+	lst, err := c.Client.ListObjectsV2(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("Error list objects with metadata & tags: %w", err)
+	}
+
+	rr, err := GetBytesCachedResponse(lst.ResultMetadata)
+	if err != nil {
+		return nil, fmt.Errorf("Error list objects for checking for generated files: %w", err)
+	}
+
+	listBucketResult := dto.ListObjectsV2Output{}
+	if err = xmlDecoder(bytes.NewReader(rr), &listBucketResult); err != nil {
+		return nil, err
+	}
+
+	listBucketResult.NextContinuationToken = lst.NextContinuationToken
+	for i := range listBucketResult.Contents {
+		mergeIn(&listBucketResult.Contents[i], &lst.Contents[i])
+	}
+
+	return &listBucketResult, nil
+}
+
+func mergeIn(into *dto.Object, src *types.Object) {
+	into.ETag = src.ETag
+	into.Key = src.Key
+	into.LastModified = src.LastModified
+	into.Owner = src.Owner
+	into.Size = src.Size
+}
+
+func xmlDecoder(body io.Reader, v interface{}) error {
+	d := xml.NewDecoder(body)
+	return d.Decode(v)
 }
