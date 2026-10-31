@@ -3,12 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/labstack/echo/v4"
@@ -61,7 +56,7 @@ func main() {
 		fx.Provide(
 			configureTracer,
 			configureInternalMinio,
-			configureAwsS3v2,
+			client.ConfigureAwsS3v2,
 			configureMinioEntities,
 			configureEcho,
 			db.ConfigureDb,
@@ -261,84 +256,6 @@ func configureInternalMinio() (*client.InternalMinioClient, error) {
 	}
 
 	return &client.InternalMinioClient{minioClient}, nil
-}
-
-type uploadParamsFromContextPresigner struct {
-	delegate *v4.Signer
-}
-
-func (s *uploadParamsFromContextPresigner) PresignHTTP(
-	ctx context.Context, credentials aws.Credentials, r *http.Request,
-	payloadHash string, service string, region string, signingTime time.Time,
-	optFns ...func(*v4.SignerOptions),
-) (url string, signedHeader http.Header, err error) {
-	cloned := r.Clone(ctx)
-
-	uplid, ok := dto.UpploadIdFromContext(ctx)
-	if ok {
-		pn, ok := dto.PartNumberFromContext(ctx)
-		if !ok {
-			err = fmt.Errorf("uploadId requires partNumber as well")
-			return
-		}
-
-		turl := cloned.URL
-		qq := turl.Query()
-
-		// multipart upload proxying 2/6
-		qq.Del("x-id") // s3 going to return error otherwise
-
-		// multipart upload proxying 3/6
-		qq.Add("uploadId", uplid)
-		qq.Add("partNumber", pn)
-
-		turl.RawQuery = qq.Encode()
-
-		cloned.URL = turl
-	}
-
-	return s.delegate.PresignHTTP(ctx, credentials, cloned, payloadHash, service, region, signingTime, optFns...)
-}
-
-// https://docs.rustfs.com/en/developer/sdk/go
-// https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
-func configureAwsS3v2(lgr *logger.Logger) (*client.S3Wrapper, error) {
-	endpoint := viper.GetString("minio.internalEndpoint")
-	accessKeyID := viper.GetString("minio.accessKeyId")
-	secretAccessKey := viper.GetString("minio.secretAccessKey")
-	location := viper.GetString("minio.location")
-	secured := viper.GetBool("minio.secured")
-
-	// build aws.Config
-	cfg := aws.Config{
-		Region:      location,
-		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, "")),
-	}
-
-	// build S3 client
-	s3client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.BaseEndpoint = &endpoint
-		// RustFS uses path-style URLs by default; virtual-host style requires RUSTFS_SERVER_DOMAINS
-		o.UsePathStyle = true
-
-		if !secured {
-			o.EndpointOptions.DisableHTTPS = true
-		}
-	})
-
-	sgn := v4.NewSigner(func(so *v4.SignerOptions) {
-		so.DisableURIPathEscaping = true
-	})
-
-	sgnwr := &uploadParamsFromContextPresigner{
-		delegate: sgn,
-	}
-
-	presignClient := s3.NewPresignClient(s3client, func(po *s3.PresignOptions) {
-		po.Presigner = sgnwr
-	})
-
-	return client.NewS3Wrapper(s3client, presignClient, lgr), nil
 }
 
 func configureTracer(lgr *logger.Logger, lc fx.Lifecycle) (*sdktrace.TracerProvider, error) {
