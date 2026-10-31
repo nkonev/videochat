@@ -124,6 +124,7 @@ schedulers:
     expiration: "30m"
     # admin
     fallbackOwnerId: 1
+    batch: 1000
 
 response:
   cache:
