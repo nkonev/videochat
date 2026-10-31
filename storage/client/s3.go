@@ -284,6 +284,8 @@ func (c *S3Wrapper) EnsureBucket(ctx context.Context, bucketName string) error {
 }
 
 func (c *S3Wrapper) ListObjectsV2WithMetadataAndTags(ctx context.Context, params *s3.ListObjectsV2Input, optFns ...func(*s3.Options)) (*dto.ListObjectsV2Output, error) {
+	// https://docs.aws.amazon.com/pdfs/sdk-for-go/v2/developer-guide/aws-sdk-go-v2-dg.pdf
+	// Overriding Client Options For Operation Call
 	ctx = dto.ContextWithRequestUserMetadata(ctx)
 	ctx = dto.ContextWithCacheResponseToBytes(ctx)
 
