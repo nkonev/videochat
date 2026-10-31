@@ -37,7 +37,7 @@ type abstractMethods interface {
 
 type abstractAvatarHandler struct {
 	s3          *client.S3Wrapper
-	minioConfig *utils.MinioConfig
+	minioConfig *utils.BucketsConfig
 	delegate    abstractMethods
 	lgr         *logger.Logger
 }
@@ -165,7 +165,7 @@ type UserAvatarHandler struct {
 	abstractAvatarHandler
 }
 
-func NewUserAvatarHandler(lgr *logger.Logger, s3 *client.S3Wrapper, minioConfig *utils.MinioConfig) *UserAvatarHandler {
+func NewUserAvatarHandler(lgr *logger.Logger, s3 *client.S3Wrapper, minioConfig *utils.BucketsConfig) *UserAvatarHandler {
 	uah := UserAvatarHandler{}
 	uah.s3 = s3
 	uah.delegate = &uah
@@ -197,7 +197,7 @@ type ChatAvatarHandler struct {
 	abstractAvatarHandler
 }
 
-func NewChatAvatarHandler(lgr *logger.Logger, s3 *client.S3Wrapper, minioConfig *utils.MinioConfig) *ChatAvatarHandler {
+func NewChatAvatarHandler(lgr *logger.Logger, s3 *client.S3Wrapper, minioConfig *utils.BucketsConfig) *ChatAvatarHandler {
 	uah := ChatAvatarHandler{}
 	uah.s3 = s3
 	uah.delegate = &uah

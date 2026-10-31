@@ -42,7 +42,7 @@ func CleanFilesOfDeletedChatScheduler(
 
 type CleanFilesOfDeletedChatService struct {
 	awsS3              *client.S3Wrapper
-	minioBucketsConfig *utils.MinioConfig
+	minioBucketsConfig *utils.BucketsConfig
 	chatClient         *client.RestClient
 	tracer             trace.Tracer
 	lgr                *logger.Logger
@@ -150,7 +150,7 @@ func (srv *CleanFilesOfDeletedChatService) processChats(c context.Context) {
 	srv.lgr.WithTracing(c).Infof("End of cleaning files of deleted chats job")
 }
 
-func NewCleanFilesOfDeletedChatService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioBucketsConfig *utils.MinioConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {
+func NewCleanFilesOfDeletedChatService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioBucketsConfig *utils.BucketsConfig, chatClient *client.RestClient) *CleanFilesOfDeletedChatService {
 	trcr := otel.Tracer("scheduler/clean-files-of-deleted-chat")
 	return &CleanFilesOfDeletedChatService{
 		lgr:                lgr,

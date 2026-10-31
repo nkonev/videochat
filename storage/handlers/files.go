@@ -29,7 +29,7 @@ const headerCorrelationId = "X-CorrelationId"
 type FilesHandler struct {
 	awsS3            *client.S3Wrapper
 	restClient       *client.RestClient
-	minioConfig      *utils.MinioConfig
+	minioConfig      *utils.BucketsConfig
 	filesService     *services.FilesService
 	redisInfoService *services.RedisInfoService
 	dba              *db.DB
@@ -44,7 +44,7 @@ func NewFilesHandler(
 	lgr *logger.Logger,
 	awsS3 *client.S3Wrapper,
 	restClient *client.RestClient,
-	minioConfig *utils.MinioConfig,
+	minioConfig *utils.BucketsConfig,
 	filesService *services.FilesService,
 	redisInfoService *services.RedisInfoService,
 	dba *db.DB,
@@ -175,7 +175,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 
 	metadata := services.SerializeMetadataSimple(userPrincipalDto.UserId, correlationIdP, nil, reqDto.IsMessageRecording, utils.GetUnixMilliUtc())
 
-	uploadDuration := viper.GetDuration("minio.presignUploadTtl")
+	uploadDuration := viper.GetDuration("s3.presignUploadTtl")
 
 	expTime := time.Now().UTC().Add(uploadDuration)
 	mpu := s3.CreateMultipartUploadInput{
@@ -189,7 +189,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		return err
 	}
 
-	chunkSize := viper.GetInt64("minio.multipart.chunkSize")
+	chunkSize := viper.GetInt64("s3.multipart.chunkSize")
 	chunksNum := int(reqDto.FileSize / chunkSize)
 	if reqDto.FileSize%chunkSize != 0 {
 		chunksNum++
@@ -215,7 +215,7 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		// we do all this stuff in order not to expose s3 outside
 		// but rather have it under one domain with the different path
 		// see also traefik stripping path middlewares
-		stringUrl, err := services.ChangeMinioUrl(u)
+		stringUrl, err := services.ChangeS3Url(u)
 		if err != nil {
 			return err
 		}
@@ -817,7 +817,7 @@ func (h *FilesHandler) DeleteHandler(c echo.Context) error {
 
 		prefix := fmt.Sprintf("chat/%v/%v/", chatId, fileItemUuid)
 
-		maxFilesInBatch := viper.GetInt("minio.delete.batch")
+		maxFilesInBatch := viper.GetInt("s3.delete.batch")
 
 		var continuationToken *string
 		for {
@@ -1150,9 +1150,9 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 		return err
 	}
 
-	endpoint := viper.GetString("minio.interContainerUrl")
-	accessKeyID := viper.GetString("minio.accessKeyId")
-	secretAccessKey := viper.GetString("minio.secretAccessKey")
+	endpoint := viper.GetString("s3.interContainerUrl")
+	accessKeyID := viper.GetString("s3.accessKeyId")
+	secretAccessKey := viper.GetString("s3.secretAccessKey")
 
 	isConferenceRecording := true
 	metadata := services.SerializeMetadataSimple(bindTo.OwnerId, nil, &isConferenceRecording, nil, utils.GetUnixMilliUtc())
@@ -1164,7 +1164,7 @@ func (h *FilesHandler) S3Handler(c echo.Context) error {
 	response := S3Response{
 		AccessKey: accessKeyID,
 		Secret:    secretAccessKey,
-		Region:    viper.GetString("minio.location"),
+		Region:    viper.GetString("s3.location"),
 		Endpoint:  endpoint,
 		Bucket:    h.minioConfig.Files,
 		Metadata:  metadata,

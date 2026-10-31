@@ -8,7 +8,7 @@ import (
 	"nkonev.name/storage/dto"
 )
 
-type MinioConfig struct {
+type BucketsConfig struct {
 	UserAvatar, ChatAvatar, Files, FilesPreview string
 }
 

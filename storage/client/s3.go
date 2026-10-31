@@ -178,11 +178,11 @@ func (m *CacheBodyToSmth) HandleDeserialize(
 // https://docs.rustfs.com/en/developer/sdk/go
 // https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
 func ConfigureAwsS3v2(lgr *logger.Logger) (*S3Wrapper, error) {
-	endpoint := viper.GetString("minio.internalEndpoint")
-	accessKeyID := viper.GetString("minio.accessKeyId")
-	secretAccessKey := viper.GetString("minio.secretAccessKey")
-	location := viper.GetString("minio.location")
-	secured := viper.GetBool("minio.secured")
+	endpoint := viper.GetString("s3.internalEndpoint")
+	accessKeyID := viper.GetString("s3.accessKeyId")
+	secretAccessKey := viper.GetString("s3.secretAccessKey")
+	location := viper.GetString("s3.location")
+	secured := viper.GetBool("s3.secured")
 
 	// build aws.Config
 	cfg := aws.Config{

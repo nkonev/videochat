@@ -44,7 +44,7 @@ func ActualizeMetadataCacheScheduler(
 
 type ActualizeMetadataCacheService struct {
 	awsS3              *client.S3Wrapper
-	minioBucketsConfig *utils.MinioConfig
+	minioBucketsConfig *utils.BucketsConfig
 	dba                *db.DB
 	tracer             trace.Tracer
 	lgr                *logger.Logger
@@ -252,7 +252,7 @@ func (srv *ActualizeMetadataCacheService) tryGetMetadata(ctx context.Context, fi
 	return ownerId, correlationId, timestamp, nil
 }
 
-func NewActualizeMetadataCacheService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioBucketsConfig *utils.MinioConfig, dba *db.DB) *ActualizeMetadataCacheService {
+func NewActualizeMetadataCacheService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioBucketsConfig *utils.BucketsConfig, dba *db.DB) *ActualizeMetadataCacheService {
 	trcr := otel.Tracer("scheduler/actualize-metadata-cache")
 	return &ActualizeMetadataCacheService{
 		awsS3:              awsS3,

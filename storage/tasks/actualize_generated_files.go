@@ -43,7 +43,7 @@ func ActualizeGeneratedFilesScheduler(
 
 type ActualizeGeneratedFilesService struct {
 	awsS3              *client.S3Wrapper
-	minioBucketsConfig *utils.MinioConfig
+	minioBucketsConfig *utils.BucketsConfig
 	previewService     *services.PreviewService
 	tracer             trace.Tracer
 	redisInfoService   *services.RedisInfoService
@@ -195,7 +195,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	srv.lgr.WithTracing(c).Infof("End of generated files job")
 }
 
-func NewActualizeGeneratedFilesService(awsS3 *client.S3Wrapper, lgr *logger.Logger, minioBucketsConfig *utils.MinioConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {
+func NewActualizeGeneratedFilesService(awsS3 *client.S3Wrapper, lgr *logger.Logger, minioBucketsConfig *utils.BucketsConfig, previewService *services.PreviewService, redisInfoService *services.RedisInfoService, convertingService *services.ConvertingService) *ActualizeGeneratedFilesService {
 	trcr := otel.Tracer("scheduler/actualize-generated-files")
 	return &ActualizeGeneratedFilesService{
 		awsS3:              awsS3,

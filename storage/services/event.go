@@ -12,7 +12,7 @@ import (
 	"nkonev.name/storage/utils"
 )
 
-func NewEventService(lgr *logger.Logger, client *client.RestClient, awsS3 *client.S3Wrapper, minioConfig *utils.MinioConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
+func NewEventService(lgr *logger.Logger, client *client.RestClient, awsS3 *client.S3Wrapper, minioConfig *utils.BucketsConfig, filesService *FilesService, publisher *producer.RabbitFileUploadedPublisher) *EventService {
 	return &EventService{
 		client:       client,
 		awsS3:        awsS3,
@@ -26,7 +26,7 @@ func NewEventService(lgr *logger.Logger, client *client.RestClient, awsS3 *clien
 type EventService struct {
 	client       *client.RestClient
 	awsS3        *client.S3Wrapper
-	minioConfig  *utils.MinioConfig
+	minioConfig  *utils.BucketsConfig
 	filesService *FilesService
 	publisher    *producer.RabbitFileUploadedPublisher
 	lgr          *logger.Logger
