@@ -227,21 +227,21 @@ func ConfigureAwsS3v2(lgr *logger.Logger) (*S3Wrapper, error) {
 		delegate: sgn,
 	}
 
-	presignClient := s3.NewPresignClient(s3client, func(po *s3.PresignOptions) {
-		po.Presigner = sgnwr
-	})
+	presignClient := s3.NewPresignClient(s3client)
 
 	return &S3Wrapper{
-		Client:        s3client,
-		PresignClient: presignClient,
-		lgr:           lgr,
+		Client:                           s3client,
+		PresignClient:                    presignClient,
+		uploadParamsFromContextPresigner: sgnwr,
+		lgr:                              lgr,
 	}, nil
 }
 
 type S3Wrapper struct {
 	*s3.Client
-	PresignClient *s3.PresignClient
-	lgr           *logger.Logger
+	PresignClient                    *s3.PresignClient
+	uploadParamsFromContextPresigner *uploadParamsFromContextPresigner
+	lgr                              *logger.Logger
 }
 
 func (c *S3Wrapper) FileExists(ctx context.Context, bucket, key string) (bool, *s3.HeadObjectOutput, error) {
@@ -343,4 +343,18 @@ func mergeIn(into *dto.Object, src *types.Object) {
 func xmlDecoder(body io.Reader, v interface{}) error {
 	d := xml.NewDecoder(body)
 	return d.Decode(v)
+}
+
+func (c *S3Wrapper) PresignPutObjectProxyable(ctx context.Context, params *s3.PutObjectInput, uploadId, partNumber string, optFns ...func(*s3.PresignOptions)) (*v4.PresignedHTTPRequest, error) {
+	// multipart upload proxying 1/6
+	ctx = dto.ContextWithUpploadId(ctx, uploadId)
+	ctx = dto.ContextWithPartNumber(ctx, partNumber)
+
+	optFnsTo := []func(*s3.PresignOptions){}
+	optFnsTo = append(optFnsTo, func(po *s3.PresignOptions) {
+		po.Presigner = c.uploadParamsFromContextPresigner
+	})
+	optFnsTo = append(optFnsTo, optFns...)
+
+	return c.PresignClient.PresignPutObject(ctx, params, optFnsTo...)
 }

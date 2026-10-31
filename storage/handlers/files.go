@@ -200,13 +200,10 @@ func (h *FilesHandler) InitMultipartUpload(c echo.Context) error {
 		ctx := c.Request().Context()
 
 		// multipart upload proxying 1/6
-		ctx = dto.ContextWithUpploadId(ctx, *upload.UploadId)
-		ctx = dto.ContextWithPartNumber(ctx, utils.IntToString(i))
-
-		presReq, err := h.awsS3.PresignClient.PresignPutObject(ctx, &s3.PutObjectInput{
+		presReq, err := h.awsS3.PresignPutObjectProxyable(ctx, &s3.PutObjectInput{
 			Bucket: &bucketName,
 			Key:    &aKey,
-		}, s3.WithPresignExpires(uploadDuration))
+		}, *upload.UploadId, utils.IntToString(i), s3.WithPresignExpires(uploadDuration))
 		if err != nil {
 			h.lgr.WithTracing(c.Request().Context()).Errorf("Error during getting presigned put url %v", err)
 			return err
