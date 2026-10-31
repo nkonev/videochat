@@ -426,3 +426,19 @@ func GetEventTimeFromTimestamp(timestamp int64) time.Time {
 	// fallback
 	return time.Now().UTC()
 }
+
+func Unique[T comparable](inputData []T) []T {
+	ret := make([]T, 0, len(inputData))
+
+	m := make(map[T]struct{}, len(inputData))
+
+	for _, v := range inputData {
+		m[v] = struct{}{}
+	}
+
+	for k := range m {
+		ret = append(ret, k)
+	}
+
+	return ret
+}
