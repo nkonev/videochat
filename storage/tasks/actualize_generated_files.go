@@ -13,7 +13,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	"nkonev.name/storage/client"
-	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 	"nkonev.name/storage/services"
 	"nkonev.name/storage/utils"
@@ -68,9 +67,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 	srv.lgr.WithTracing(c).Infof("Checking for missing previews and converted")
 	var continuationToken *string
 	for {
-		cr := dto.ContextWithRequestUserMetadata(c)
-		crr := dto.ContextWithCacheResponseToString(cr)
-		lst, err := srv.awsS3.ListObjectsV2(crr, &s3.ListObjectsV2Input{
+		lst, err := srv.awsS3.ListObjectsV2WithMetadataAndTags(c, &s3.ListObjectsV2Input{
 			Bucket:            &srv.minioBucketsConfig.Files,
 			Prefix:            &filenameChatPrefix,
 			ContinuationToken: continuationToken,
@@ -80,18 +77,6 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
 			break
 		}
-		//rr :=awsmiddleware.GetRawResponse(lst.ResultMetadata).(*smithyhttp.Response)
-		// defer rr.Body.Close()
-		// bb, err := io.ReadAll(rr.Body)
-		// bbs := string(bb)
-		// println(bbs)
-		rr, err := client.GetCachedResponse(lst.ResultMetadata)
-		if err != nil {
-			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
-			break
-		}
-		println(rr)
-
 		continuationToken = lst.NextContinuationToken
 
 		for _, fileOjInfo := range lst.Contents {
@@ -112,6 +97,8 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 					srv.previewService.CreatePreview(c, aKey)
 				}
 
+				isMessageRecording := utils.GetBoolean(fileOjInfo.UserMetadata[services.MessageRecordingKey()])
+
 				isConverting, err := srv.redisInfoService.GetOriginalConverting(c, aKey)
 				if err != nil {
 					srv.lgr.WithTracing(c).Errorf("Unable to isConverting for key %v from redis: %v", aKey, err)
@@ -124,20 +111,9 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 					srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", keyOfConverted, err)
 					continue
 				}
-				// TODO rustfs restore isMessageRecording here
-				if !convertedExists && utils.IsVideo(aKey) && !utils.IsConverted(aKey) && !isConverting {
-					// get metadata
-					mdt, err := srv.awsS3.HeadObject(c, &s3.HeadObjectInput{
-						Bucket: &srv.minioBucketsConfig.Files,
-						Key:    &aKey,
-					})
-					if err != nil {
-						srv.lgr.WithTracing(c).Errorf("Unable to get metadata of %v: %v", aKey, err)
-						continue
-					}
 
+				if !convertedExists && utils.IsVideo(aKey) && isMessageRecording && !utils.IsConverted(aKey) && !isConverting {
 					// produce _converted.webm for message recording
-					isMessageRecording := utils.GetBoolean(mdt.Metadata[services.MessageRecordingKey()])
 					if isMessageRecording {
 						srv.lgr.WithTracing(c).Infof("Create missed converted for %v", aKey)
 						srv.convertingService.Convert(c, aKey)

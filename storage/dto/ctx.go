@@ -18,6 +18,11 @@ type ctxKeyCacheResponseToStringType string
 
 const ctxKeyCacheResponseToString ctxKeyCacheResponseToStringType = "ctxKeyCacheResponseToString"
 
+type ctxKeyCacheResponseToBytesType string
+
+const ctxKeyCacheResponseToBytes ctxKeyCacheResponseToBytesType = "ctxKeyCacheResponseToBytes"
+
+
 func ContextWithUpploadId(ctx context.Context, v string) context.Context {
 	return context.WithValue(ctx, ctxKeyUpploadId, v)
 }
@@ -32,6 +37,10 @@ func ContextWithRequestUserMetadata(ctx context.Context) context.Context {
 
 func ContextWithCacheResponseToString(ctx context.Context) context.Context {
 	return context.WithValue(ctx, ctxKeyCacheResponseToString, true)
+}
+
+func ContextWithCacheResponseToBytes(ctx context.Context) context.Context {
+	return context.WithValue(ctx, ctxKeyCacheResponseToBytes, true)
 }
 
 func UpploadIdFromContext(ctx context.Context) (string, bool) {
@@ -51,5 +60,10 @@ func RequestUserMetadataFromContext(ctx context.Context) bool {
 
 func CacheResponseToStringFromContext(ctx context.Context) bool {
 	r, ok := ctx.Value(ctxKeyCacheResponseToString).(bool)
+	return r && ok
+}
+
+func CacheResponseToBytesFromContext(ctx context.Context) bool {
+	r, ok := ctx.Value(ctxKeyCacheResponseToBytes).(bool)
 	return r && ok
 }
