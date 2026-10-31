@@ -109,12 +109,12 @@ func (m *RequestUserMetadata) HandleBuild(
 
 func AddCacheBodyToStringMiddleware(stack *middleware.Stack) error {
 	// /home/nkonev/go/pkg/mod/github.com/aws/aws-sdk-go-v2/service/s3@v1.114.5/internal/customizations/handle_200_error.go
-	return stack.Deserialize.Insert(&CacheBodyToString{}, "OperationDeserializer", middleware.After)
+	return stack.Deserialize.Insert(&CacheBodyToSmth{}, "OperationDeserializer", middleware.After)
 }
 
-type CacheBodyToString struct{}
+type CacheBodyToSmth struct{}
 
-func (*CacheBodyToString) ID() string {
+func (*CacheBodyToSmth) ID() string {
 	return "CacheBodyToSmth"
 }
 
@@ -154,7 +154,7 @@ func GetBytesCachedResponse(metadata middleware.Metadata) ([]byte, error) {
 	}
 }
 
-func (m *CacheBodyToString) HandleDeserialize(
+func (m *CacheBodyToSmth) HandleDeserialize(
 	ctx context.Context, input middleware.DeserializeInput, next middleware.DeserializeHandler,
 ) (
 	output middleware.DeserializeOutput, metadata middleware.Metadata, err error,
