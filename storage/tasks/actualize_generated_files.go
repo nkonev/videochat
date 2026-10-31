@@ -1,15 +1,10 @@
 package tasks
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"io"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/minio/minio-go/v7"
 	"github.com/nkonev/dcron"
 	redisLock "github.com/nkonev/dcron/plugin/lock/redis"
@@ -63,98 +58,6 @@ func (srv *ActualizeGeneratedFilesService) doJob(ctx context.Context) {
 	srv.processFiles(ctx, filenameChatPrefix)
 }
 
-type RequestUserMetadata struct {
-}
-
-func AddRequestUserMetadataMiddleware(stack *middleware.Stack) error {
-	return stack.Build.Add(&RequestUserMetadata{}, middleware.After)
-}
-
-func (m *RequestUserMetadata) ID() string { return "RequestUserMetadata" }
-
-func (m *RequestUserMetadata) HandleBuild(
-	ctx context.Context, in middleware.BuildInput, next middleware.BuildHandler,
-) (
-	out middleware.BuildOutput, metadata middleware.Metadata, err error,
-) {
-	req, ok := in.Request.(*smithyhttp.Request)
-	if !ok {
-		return out, metadata, fmt.Errorf("unknown request type %T", req)
-	}
-
-	ok = dto.RequestUserMetadataFromContext(ctx)
-	if ok {
-		q := req.URL.Query()
-		q.Set("metadata", "true")
-		req.URL.RawQuery = q.Encode()
-	}
-
-	return next.HandleBuild(ctx, in)
-}
-
-func AddCacheBodyToStringMiddleware(stack *middleware.Stack) error {
-	// /home/nkonev/go/pkg/mod/github.com/aws/aws-sdk-go-v2/service/s3@v1.114.5/internal/customizations/handle_200_error.go
-	return stack.Deserialize.Insert(&CacheBodyToString{}, "OperationDeserializer", middleware.After)
-}
-
-type CacheBodyToString struct{}
-
-func (*CacheBodyToString) ID() string {
-	return "CacheBodyToString"
-}
-
-type CacheBodyToStringKeyType string
-
-const CacheBodyToStringKey CacheBodyToStringKeyType = "CacheBodyToString"
-
-func SetCachedResponseToMetadata(metadata middleware.Metadata, v string) {
-	metadata.Set(CacheBodyToStringKey, v)
-}
-
-func GetCachedResponse(metadata middleware.Metadata) (string, error) {
-	v := metadata.Get(CacheBodyToStringKey)
-	switch typed := v.(type) {
-	case string:
-		return typed, nil
-	default:
-		return "", fmt.Errorf("unknown type: %T", typed)
-	}
-}
-
-func (m *CacheBodyToString) HandleDeserialize(
-	ctx context.Context, input middleware.DeserializeInput, next middleware.DeserializeHandler,
-) (
-	output middleware.DeserializeOutput, metadata middleware.Metadata, err error,
-) {
-	out, metadata, err := next.HandleDeserialize(ctx, input)
-	if err != nil {
-		return out, metadata, fmt.Errorf("error next.HandleDeserialize %w", err)
-	}
-
-	ok := dto.CacheResponseToStringFromContext(ctx)
-	if ok {
-		resp, ok := out.RawResponse.(*smithyhttp.Response)
-		if !ok {
-			return out, metadata, fmt.Errorf("unknown response type %T", resp)
-		}
-		origBody := resp.Body
-		defer origBody.Close()
-
-		bb, err := io.ReadAll(origBody)
-		if err != nil {
-			return out, metadata, fmt.Errorf("error reading response %w", err)
-		}
-
-		strbb := string(bb)
-
-		SetCachedResponseToMetadata(metadata, strbb)
-
-		resp.Body = io.NopCloser(bytes.NewReader(bb))
-	}
-
-	return out, metadata, err
-}
-
 func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filenameChatPrefix string) {
 	srv.lgr.WithTracing(c).Infof("Starting actualize generated files job")
 
@@ -172,9 +75,6 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 			Prefix:            &filenameChatPrefix,
 			ContinuationToken: continuationToken,
 			MaxKeys:           new(int32(maxFilesInBatch)),
-		}, func(o *s3.Options) {
-			// see all middlewares here /home/nkonev/go/pkg/mod/github.com/aws/smithy-go@v1.28.6/middleware/stack.go :: Stack
-			o.APIOptions = append(o.APIOptions, AddRequestUserMetadataMiddleware, AddCacheBodyToStringMiddleware)
 		})
 		if err != nil {
 			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
@@ -185,7 +85,7 @@ func (srv *ActualizeGeneratedFilesService) processFiles(c context.Context, filen
 		// bb, err := io.ReadAll(rr.Body)
 		// bbs := string(bb)
 		// println(bbs)
-		rr, err := GetCachedResponse(lst.ResultMetadata)
+		rr, err := client.GetCachedResponse(lst.ResultMetadata)
 		if err != nil {
 			srv.lgr.WithTracing(c).Errorf("Error list objects for checking for generated files")
 			break

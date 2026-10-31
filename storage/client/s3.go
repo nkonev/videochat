@@ -1,14 +1,25 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
+	"github.com/aws/smithy-go/middleware"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/minio/minio-go/v7"
+	"github.com/spf13/viper"
+	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 )
 
@@ -29,12 +40,181 @@ func (c *InternalMinioClient) FileExists(ctx context.Context, bucket, key string
 	return true, &objectInfo, err
 }
 
-func NewS3Wrapper(cl *s3.Client, presignClient *s3.PresignClient, lg *logger.Logger) *S3Wrapper {
-	return &S3Wrapper{
-		Client:        cl,
-		PresignClient: presignClient,
-		lgr:           lg,
+type uploadParamsFromContextPresigner struct {
+	delegate *v4.Signer
+}
+
+func (s *uploadParamsFromContextPresigner) PresignHTTP(
+	ctx context.Context, credentials aws.Credentials, r *http.Request,
+	payloadHash string, service string, region string, signingTime time.Time,
+	optFns ...func(*v4.SignerOptions),
+) (url string, signedHeader http.Header, err error) {
+	cloned := r.Clone(ctx)
+
+	uplid, ok := dto.UpploadIdFromContext(ctx)
+	if ok {
+		pn, ok := dto.PartNumberFromContext(ctx)
+		if !ok {
+			err = fmt.Errorf("uploadId requires partNumber as well")
+			return
+		}
+
+		turl := cloned.URL
+		qq := turl.Query()
+
+		// multipart upload proxying 2/6
+		qq.Del("x-id") // s3 going to return error otherwise
+
+		// multipart upload proxying 3/6
+		qq.Add("uploadId", uplid)
+		qq.Add("partNumber", pn)
+
+		turl.RawQuery = qq.Encode()
+
+		cloned.URL = turl
 	}
+
+	return s.delegate.PresignHTTP(ctx, credentials, cloned, payloadHash, service, region, signingTime, optFns...)
+}
+
+type RequestUserMetadata struct {
+}
+
+func AddRequestUserMetadataMiddleware(stack *middleware.Stack) error {
+	return stack.Build.Add(&RequestUserMetadata{}, middleware.After)
+}
+
+func (m *RequestUserMetadata) ID() string { return "RequestUserMetadata" }
+
+func (m *RequestUserMetadata) HandleBuild(
+	ctx context.Context, in middleware.BuildInput, next middleware.BuildHandler,
+) (
+	out middleware.BuildOutput, metadata middleware.Metadata, err error,
+) {
+	req, ok := in.Request.(*smithyhttp.Request)
+	if !ok {
+		return out, metadata, fmt.Errorf("unknown request type %T", req)
+	}
+
+	ok = dto.RequestUserMetadataFromContext(ctx)
+	if ok {
+		q := req.URL.Query()
+		q.Set("metadata", "true")
+		req.URL.RawQuery = q.Encode()
+	}
+
+	return next.HandleBuild(ctx, in)
+}
+
+func AddCacheBodyToStringMiddleware(stack *middleware.Stack) error {
+	// /home/nkonev/go/pkg/mod/github.com/aws/aws-sdk-go-v2/service/s3@v1.114.5/internal/customizations/handle_200_error.go
+	return stack.Deserialize.Insert(&CacheBodyToString{}, "OperationDeserializer", middleware.After)
+}
+
+type CacheBodyToString struct{}
+
+func (*CacheBodyToString) ID() string {
+	return "CacheBodyToString"
+}
+
+type CacheBodyToStringKeyType string
+
+const CacheBodyToStringKey CacheBodyToStringKeyType = "CacheBodyToString"
+
+func SetCachedResponseToMetadata(metadata middleware.Metadata, v string) {
+	metadata.Set(CacheBodyToStringKey, v)
+}
+
+func GetCachedResponse(metadata middleware.Metadata) (string, error) {
+	v := metadata.Get(CacheBodyToStringKey)
+	switch typed := v.(type) {
+	case string:
+		return typed, nil
+	default:
+		return "", fmt.Errorf("unknown type: %T", typed)
+	}
+}
+
+func (m *CacheBodyToString) HandleDeserialize(
+	ctx context.Context, input middleware.DeserializeInput, next middleware.DeserializeHandler,
+) (
+	output middleware.DeserializeOutput, metadata middleware.Metadata, err error,
+) {
+	out, metadata, err := next.HandleDeserialize(ctx, input)
+	if err != nil {
+		return out, metadata, fmt.Errorf("error next.HandleDeserialize %w", err)
+	}
+
+	ok := dto.CacheResponseToStringFromContext(ctx)
+	if ok {
+		resp, ok := out.RawResponse.(*smithyhttp.Response)
+		if !ok {
+			return out, metadata, fmt.Errorf("unknown response type %T", resp)
+		}
+		origBody := resp.Body
+		defer origBody.Close()
+
+		bb, err := io.ReadAll(origBody)
+		if err != nil {
+			return out, metadata, fmt.Errorf("error reading response %w", err)
+		}
+
+		strbb := string(bb)
+
+		SetCachedResponseToMetadata(metadata, strbb)
+
+		resp.Body = io.NopCloser(bytes.NewReader(bb))
+	}
+
+	return out, metadata, err
+}
+
+// https://docs.rustfs.com/en/developer/sdk/go
+// https://docs.aws.amazon.com/code-library/latest/ug/go_2_s3_code_examples.html
+func ConfigureAwsS3v2(lgr *logger.Logger) (*S3Wrapper, error) {
+	endpoint := viper.GetString("minio.internalEndpoint")
+	accessKeyID := viper.GetString("minio.accessKeyId")
+	secretAccessKey := viper.GetString("minio.secretAccessKey")
+	location := viper.GetString("minio.location")
+	secured := viper.GetBool("minio.secured")
+
+	// build aws.Config
+	cfg := aws.Config{
+		Region:      location,
+		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, "")),
+	}
+
+	// build S3 client
+	s3client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		// see all middlewares here /home/nkonev/go/pkg/mod/github.com/aws/smithy-go@v1.28.6/middleware/stack.go :: Stack
+		o.APIOptions = append(o.APIOptions, AddRequestUserMetadataMiddleware, AddCacheBodyToStringMiddleware)
+
+		o.BaseEndpoint = &endpoint
+		// RustFS uses path-style URLs by default; virtual-host style requires RUSTFS_SERVER_DOMAINS
+		o.UsePathStyle = true
+
+		if !secured {
+			o.EndpointOptions.DisableHTTPS = true
+		}
+	})
+
+	sgn := v4.NewSigner(func(so *v4.SignerOptions) {
+		so.DisableURIPathEscaping = true
+	})
+
+	sgnwr := &uploadParamsFromContextPresigner{
+		delegate: sgn,
+	}
+
+	presignClient := s3.NewPresignClient(s3client, func(po *s3.PresignOptions) {
+		po.Presigner = sgnwr
+	})
+
+	return &S3Wrapper{
+		Client:        s3client,
+		PresignClient: presignClient,
+		lgr:           lgr,
+	}, nil
 }
 
 type S3Wrapper struct {
