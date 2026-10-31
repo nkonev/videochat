@@ -18,28 +18,10 @@ import (
 	"github.com/aws/smithy-go"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
-	"github.com/minio/minio-go/v7"
 	"github.com/spf13/viper"
 	"nkonev.name/storage/dto"
 	"nkonev.name/storage/logger"
 )
-
-type InternalMinioClient struct {
-	*minio.Client
-}
-
-func (c *InternalMinioClient) FileExists(ctx context.Context, bucket, key string) (bool, *minio.ObjectInfo, error) {
-	objectInfo, err := c.Client.StatObject(ctx, bucket, key, minio.StatObjectOptions{})
-	if err != nil {
-		if errTyped, ok := err.(minio.ErrorResponse); ok {
-			if errTyped.Code == "NoSuchKey" {
-				return false, nil, nil
-			}
-		}
-		return false, nil, err
-	}
-	return true, &objectInfo, err
-}
 
 type uploadParamsFromContextPresigner struct {
 	delegate *v4.Signer
