@@ -56,7 +56,7 @@ func createAndBind(lgr *logger.Logger, name string, key string, exchange string,
 }
 
 func CreateMinioEventsChannel(lgr *logger.Logger, connection *rabbitmq.Connection, onMessage MinioEventsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
-	var queueName = "storage-minio-file-bucket"
+	var queueName = "storage-s3-file-bucket"
 
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		lgr,

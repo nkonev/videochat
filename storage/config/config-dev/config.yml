@@ -102,21 +102,18 @@ redis:
 
 schedulers:
   cleanFilesOfDeletedChatTask:
-    # TODO rustfs
-    enabled: false
+    enabled: true
     cron: "0 * * * * *"
     expiration: "30m"
     chatCount: 100
     batch: 1000
   actualizeGeneratedFilesTask:
-    # TODO rustfs
-    enabled: false
+    enabled: true
     cron: "0 * * * * *"
     expiration: "30m"
     batch: 1000
   actualizeMetadataCacheTask:
-    # TODO rustfs
-    enabled: false
+    enabled: true
     cron: "0 */5 * * * *"
     expiration: "30m"
     # admin
