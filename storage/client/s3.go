@@ -115,7 +115,7 @@ func AddCacheBodyToStringMiddleware(stack *middleware.Stack) error {
 type CacheBodyToString struct{}
 
 func (*CacheBodyToString) ID() string {
-	return "CacheBodyToString"
+	return "CacheBodyToSmth"
 }
 
 type CacheBodyToStringKeyType string
