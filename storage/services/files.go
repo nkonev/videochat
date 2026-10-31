@@ -22,7 +22,7 @@ import (
 type FilesService struct {
 	awsS3       *client.S3Wrapper
 	restClient  *client.RestClient
-	minioConfig *utils.MinioConfig
+	minioConfig *utils.BucketsConfig
 	dba         *db.DB
 	lgr         *logger.Logger
 }
@@ -32,7 +32,7 @@ func NewFilesService(
 	awsS3 *client.S3Wrapper,
 	chatClient *client.RestClient,
 	dba *db.DB,
-	minioConfig *utils.MinioConfig,
+	minioConfig *utils.BucketsConfig,
 ) *FilesService {
 	return &FilesService{
 		awsS3:       awsS3,
@@ -148,7 +148,7 @@ func (h *FilesService) GetListFilesItemUuids(
 }
 
 func (h *FilesService) GetTemporaryDownloadUrl(ctx context.Context, aKey string) (string, time.Duration, error) {
-	ttl := viper.GetDuration("minio.presignDownloadTtl")
+	ttl := viper.GetDuration("s3.presignDownloadTtl")
 
 	pres, err := h.awsS3.PresignClient.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: &h.minioConfig.Files,
@@ -164,7 +164,7 @@ func (h *FilesService) GetTemporaryDownloadUrl(ctx context.Context, aKey string)
 		return "", time.Second, err
 	}
 
-	downloadUrl, err := ChangeMinioUrl(u)
+	downloadUrl, err := ChangeS3Url(u)
 	if err != nil {
 		return "", time.Second, err
 	}
@@ -186,8 +186,8 @@ func (h *FilesService) GetConstantDownloadUrl(aKey string) (string, error) {
 	return downloadUrlStr, nil
 }
 
-func ChangeMinioUrl(url *url.URL) (string, error) {
-	externalS3UrlPrefix := viper.GetString("minio.externalS3UrlPrefix")
+func ChangeS3Url(url *url.URL) (string, error) {
+	externalS3UrlPrefix := viper.GetString("s3.externalS3UrlPrefix")
 	parsed, err := url.Parse(externalS3UrlPrefix)
 	if err != nil {
 		return "", err

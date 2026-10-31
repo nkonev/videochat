@@ -23,7 +23,7 @@ func CreateS3EventListener(
 	previewService *services.PreviewService,
 	eventService *services.EventService,
 	client *client.RestClient,
-	minioConfig *utils.MinioConfig,
+	minioConfig *utils.BucketsConfig,
 	awsS3 *client.S3Wrapper,
 	convertingService *services.ConvertingService,
 	dba *db.DB,
@@ -31,7 +31,7 @@ func CreateS3EventListener(
 	tr := otel.Tracer("amqp/listener")
 
 	return func(msg *amqp.Delivery) error {
-		ctx, span := tr.Start(context.Background(), "storage.minio.listener")
+		ctx, span := tr.Start(context.Background(), "storage.s3.listener")
 		defer span.End()
 
 		bytesData := msg.Body
@@ -129,7 +129,7 @@ func isEventForConvertingService(eventType dto.EventType, minioEvent *dto.MinioE
 		!previewExists // prevents the indefinite converting
 }
 
-func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig *utils.MinioConfig, awsS3 *client.S3Wrapper, normalizedKey string) (bool, error) {
+func isPreviewAlreadyExists(ctx context.Context, lgr *logger.Logger, minioConfig *utils.BucketsConfig, awsS3 *client.S3Wrapper, normalizedKey string) (bool, error) {
 	previewKey := utils.SetVideoPreviewExtension(normalizedKey)
 	exists, _, err := awsS3.FileExists(ctx, minioConfig.FilesPreview, previewKey)
 	if err != nil {

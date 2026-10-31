@@ -20,13 +20,13 @@ import (
 
 type ConvertingService struct {
 	awsS3            *client.S3Wrapper
-	minioConfig      *utils.MinioConfig
+	minioConfig      *utils.BucketsConfig
 	tempDirPrefix    string
 	redisInfoService *RedisInfoService
 	lgr              *logger.Logger
 }
 
-func NewConvertingService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioConfig *utils.MinioConfig, redisInfoService *RedisInfoService) *ConvertingService {
+func NewConvertingService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioConfig *utils.BucketsConfig, redisInfoService *RedisInfoService) *ConvertingService {
 	tempDirPrefix := viper.GetString("converting.tempDir")
 	lgr.Infof("Ensuring temp root dir for the converting videos using ffmpeg: %v", tempDirPrefix)
 	os.MkdirAll(tempDirPrefix, os.ModePerm)

@@ -23,13 +23,13 @@ import (
 
 type PreviewService struct {
 	awsS3                       *client.S3Wrapper
-	minioConfig                 *utils.MinioConfig
+	minioConfig                 *utils.BucketsConfig
 	rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher
 	filesService                *FilesService
 	lgr                         *logger.Logger
 }
 
-func NewPreviewService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioConfig *utils.MinioConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
+func NewPreviewService(lgr *logger.Logger, awsS3 *client.S3Wrapper, minioConfig *utils.BucketsConfig, rabbitFileUploadedPublisher *producer.RabbitFileUploadedPublisher, filesService *FilesService) *PreviewService {
 	return &PreviewService{
 		awsS3:                       awsS3,
 		minioConfig:                 minioConfig,

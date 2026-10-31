@@ -54,7 +54,7 @@ func main() {
 		fx.Provide(
 			configureTracer,
 			client.ConfigureAwsS3v2,
-			configureMinioEntities,
+			configureS3Entities,
 			configureEcho,
 			db.ConfigureDb,
 			configureMigrations,
@@ -296,30 +296,30 @@ func runEcho(lgr *logger.Logger, e *echo.Echo) {
 }
 
 func ensureAndGetUserAvatarBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
-	bucketName := viper.GetString("minio.bucket.userAvatar")
+	bucketName := viper.GetString("s3.bucket.userAvatar")
 	err := s3Client.EnsureBucket(ctx, bucketName)
 	return bucketName, err
 }
 
 func ensureAndGetChatAvatarBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
-	bucketName := viper.GetString("minio.bucket.chatAvatar")
+	bucketName := viper.GetString("s3.bucket.chatAvatar")
 	err := s3Client.EnsureBucket(ctx, bucketName)
 	return bucketName, err
 }
 
 func ensureAndGetFilesBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
-	bucketName := viper.GetString("minio.bucket.files")
+	bucketName := viper.GetString("s3.bucket.files")
 	err := s3Client.EnsureBucket(ctx, bucketName)
 	return bucketName, err
 }
 
 func ensureAndGetFilesPreviewBucket(ctx context.Context, s3Client *client.S3Wrapper) (string, error) {
-	bucketName := viper.GetString("minio.bucket.filesPreview")
+	bucketName := viper.GetString("s3.bucket.filesPreview")
 	err := s3Client.EnsureBucket(ctx, bucketName)
 	return bucketName, err
 }
 
-func configureMinioEntities(lgr *logger.Logger, s3Client *client.S3Wrapper) (*utils.MinioConfig, error) {
+func configureS3Entities(lgr *logger.Logger, s3Client *client.S3Wrapper) (*utils.BucketsConfig, error) {
 	var ua, ca, f, p string
 	var err error
 
@@ -344,7 +344,7 @@ func configureMinioEntities(lgr *logger.Logger, s3Client *client.S3Wrapper) (*ut
 		return nil, err
 	}
 
-	location := viper.GetString("minio.location")
+	location := viper.GetString("s3.location")
 
 	arn := "arn:rustfs:sqs:" + location + ":primary:amqp"
 
@@ -382,7 +382,7 @@ func configureMinioEntities(lgr *logger.Logger, s3Client *client.S3Wrapper) (*ut
 		}
 		lgr.Info("PutBucketNotificationConfiguration response is: %v", output)
 	}
-	return &utils.MinioConfig{
+	return &utils.BucketsConfig{
 		UserAvatar:   ua,
 		ChatAvatar:   ca,
 		Files:        f,
