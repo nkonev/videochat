@@ -523,7 +523,8 @@ func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfPartic
 		return nil, nil, errors.New("Wrong invariant: len(behalfParticipantIds) == 0")
 	}
 	multipleBehalfUserId := len(behalfParticipantIds) > 1
-	if multipleBehalfUserId && (len(selectedChatIds) == 0) {
+	noChatsSelected := len(selectedChatIds) == 0
+	if multipleBehalfUserId && noChatsSelected {
 		return nil, nil, errors.New("Wrong invariant: multipleBehalfUserId is true and empty chatIds")
 	}
 
@@ -565,7 +566,11 @@ func (m *EnrichingProjection) GetChatsEnriched(ctx context.Context, behalfPartic
 				return nil, err
 			}
 		} else {
-			areAdminsOfChatIds, err = m.cp.getAreAdminsOfChatIds(ctx, tx, behalfParticipantIds[0], selectedChatIds)
+			chatIds := selectedChatIds
+			if noChatsSelected {
+				chatIds = getChatIdsFromChats(chats)
+			}
+			areAdminsOfChatIds, err = m.cp.getAreAdminsOfChatIds(ctx, tx, behalfParticipantIds[0], chatIds)
 			if err != nil {
 				return nil, err
 			}
