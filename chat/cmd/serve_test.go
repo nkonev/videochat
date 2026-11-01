@@ -2158,9 +2158,12 @@ func TestCreateChat(t *testing.T) {
 						e.UserId == user1 &&
 						e.ChatNotification.ChatViewDto.Id == chat1Id &&
 						e.ChatNotification.ChatViewDto.Title == chat1Name &&
+						e.ChatNotification.ChatViewDto.Pinned == false &&
 						len(e.ChatNotification.Participants) == 1 &&
 						e.ChatNotification.Participants[0].Id == user1 &&
-						e.ChatNotification.Participants[0].Login == user1Login
+						e.ChatNotification.Participants[0].Login == user1Login &&
+						*e.ChatNotification.CanEdit == true &&
+						*e.ChatNotification.CanDelete == true
 				},
 			}))
 
@@ -2168,11 +2171,15 @@ func TestCreateChat(t *testing.T) {
 			require.NoError(t, err, "error in getting chats")
 			assert.Equal(t, 1, len(user1Chats))
 			chat1OfUser1 := user1Chats[0]
+			assert.Equal(t, chat1Id, chat1OfUser1.Id)
 			assert.Equal(t, false, chat1OfUser1.Pinned)
 			assert.Equal(t, chat1Name, chat1OfUser1.Title)
+			assert.Equal(t, 1, len(chat1OfUser1.Participants))
+			assert.Equal(t, user1, chat1OfUser1.Participants[0].Id)
+			assert.Equal(t, user1Login, chat1OfUser1.Participants[0].Login)
 			assert.Equal(t, int64(0), chat1OfUser1.UnreadMessages)
-			assert.Equal(t, true, chat1OfUser1.CanEdit)
-			assert.Equal(t, true, chat1OfUser1.CanDelete)
+			assert.Equal(t, true, *chat1OfUser1.CanEdit)
+			assert.Equal(t, true, *chat1OfUser1.CanDelete)
 		})
 }
 
