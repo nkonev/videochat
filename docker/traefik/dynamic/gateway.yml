@@ -41,11 +41,10 @@ http:
       loadBalancer:
         servers:
           - url: http://rustfs:9000
-    # TODO rustfs
-    minio-ui-service:
+    rustfs-ui-service:
       loadBalancer:
         servers:
-          - url: http://minio:9001
+          - url: http://rustfs:9001
     rabbitmq-ui-service:
       loadBalancer:
         servers:
@@ -198,13 +197,18 @@ http:
         - "s3-strip-prefix-middleware"
         - "retry-middleware"
         - "s3-fix-host-middleware"
-    minio-ui-router:
-      rule: "PathPrefix(`/minio`)"
-      service: minio-ui-service
+    rustfs-ui-router:
+      rule: "PathPrefix(`/rustfs`)"
+      service: rustfs-ui-service
       middlewares:
         - "auth-middleware"
         - "retry-middleware"
-        - "minio-ui-strip-prefix-middleware"
+    rustfs-ui-methods-router:
+      rule: "( PathPrefix(`/`) && HeaderRegexp(`x-amz-date`, `.*`) ) || ( PathPrefix(`/files`) || PathPrefix(`/files-preview`) || PathPrefix(`/chat-avatar`) || PathPrefix(`/user-avatar`) )"
+      service: rustfs-ui-service
+      middlewares:
+        - "auth-middleware"
+        - "retry-middleware"
     rabbitmq-ui-router:
       rule: "PathPrefix(`/rabbitmq`)"
       service: rabbitmq-ui-service
@@ -249,10 +253,6 @@ http:
       headers:
         customRequestHeaders:
           Host: "127.0.0.1:39000"
-    minio-ui-strip-prefix-middleware:
-      stripPrefix:
-        prefixes:
-          - "/minio"
     aaa-stripprefix-middleware:
       stripPrefix:
         prefixes:

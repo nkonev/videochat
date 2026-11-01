@@ -222,7 +222,7 @@ custom.allowed-avatar-urls: ""
 custom.admins-corner:
   management-urls:
     - "/traces"
-    - "/minio"
+    - "/rustfs"
     - "/rabbitmq"
     - "/postgresql"
     - "/logs"
