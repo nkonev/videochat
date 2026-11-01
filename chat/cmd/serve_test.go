@@ -2163,6 +2163,16 @@ func TestCreateChat(t *testing.T) {
 						e.ChatNotification.Participants[0].Login == user1Login
 				},
 			}))
+
+			user1Chats, _, err := deps.testRestClient.GetChats(ctx, user1)
+			require.NoError(t, err, "error in getting chats")
+			assert.Equal(t, 1, len(user1Chats))
+			chat1OfUser1 := user1Chats[0]
+			assert.Equal(t, false, chat1OfUser1.Pinned)
+			assert.Equal(t, chat1Name, chat1OfUser1.Title)
+			assert.Equal(t, int64(0), chat1OfUser1.UnreadMessages)
+			assert.Equal(t, true, chat1OfUser1.CanEdit)
+			assert.Equal(t, true, chat1OfUser1.CanDelete)
 		})
 }
 
