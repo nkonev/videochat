@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/nkonev/dcron"
@@ -131,6 +132,8 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 				correlationIdPtr = correlationIdFromTags
 			}
 
+			updateTime := time.Now().UTC()
+
 			toSave = append(toSave, dto.MetadataCache{
 				ChatId:         chatId,
 				FileItemUuid:   fileItemUuid,
@@ -140,7 +143,7 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 				Published:      published,
 				FileSize:       *fileOjInfo.Size,
 				CreateDateTime: eventTime,
-				EditDateTime:   eventTime,
+				EditDateTime:   updateTime,
 			})
 		}
 
