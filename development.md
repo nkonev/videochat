@@ -1007,6 +1007,15 @@ Feb 03 10:24:12 Chesnaught chat-storage[1036]:         status code: 507, request
 mc rm --recursive --force --dangerous --incomplete local/files
 ```
 
+# Storage
+Check deleting excess metadata cache
+```
+docker exec -it postgresql-citus-coordinator-1  psql -U postgres -d storage
+
+insert into metadata_cache (chat_id, file_item_uuid, filename, owner_user_id, published, file_size) values (1, '01a19e3a-cc02-7e8e-bca0-df2487ec0c3c', 'bad.png', 1, true, 123);
+
+select * from metadata_cache where file_item_uuid = '01a19e3a-cc02-7e8e-bca0-df2487ec0c3c';
+```
 
 # PostgreSQL
 ## Open pgCenter

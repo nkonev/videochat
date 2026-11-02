@@ -75,6 +75,8 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 		}
 		continuationToken = lst.NextContinuationToken
 
+		toSave := []dto.MetadataCache{}
+
 		for i, fileOjInfo := range lst.Contents {
 			if fileOjInfo.Key == nil {
 				srv.lgr.WithTracing(c).Error("Nil key for idx '%v'", i)
@@ -88,9 +90,7 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 				continue
 			}
 
-			// here in minio 'chat/108/'
-
-			srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v'", aKey)
+			srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v' for save", aKey)
 
 			chatId, err := utils.ParseChatId(aKey)
 			if err != nil {
@@ -108,62 +108,45 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 				continue
 			}
 
-			mcid := dto.MetadataCacheId{
-				ChatId:       chatId,
-				FileItemUuid: fileItemUuid,
-				Filename:     filename,
-			}
-			metadataCache, err := db.Get(c, srv.dba, mcid, nil)
+			// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
+			ownerId, correlationId, timestamp, err := srv.tryGetMetadata(c, fileOjInfo)
 			if err != nil {
-				srv.lgr.WithTracing(c).Errorf("Unable to check existence for %v: %v", mcid.String(), err)
+				srv.lgr.WithTracing(c).Errorf("Unable to get metadata for %v: %v", aKey, err)
+
 				continue
 			}
 
-			if metadataCache == nil {
-				srv.lgr.WithTracing(c).Infof("Create metadata cache item for missing %v", aKey)
-
-				// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
-				ownerId, correlationId, timestamp, err := srv.tryGetMetadata(c, fileOjInfo)
-				if err != nil {
-					srv.lgr.WithTracing(c).Errorf("Unable to get metadata for %v: %v", aKey, err)
-
-					continue
-				}
-
-				var correlationIdPtr *string
-				if len(correlationId) > 0 {
-					correlationIdPtr = &correlationId
-				}
-
-				eventTime := utils.GetEventTimeFromTimestamp(timestamp)
-
-				// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
-				published, correlationIdFromTags := srv.tryGetTags(c, fileOjInfo)
-
-				if correlationIdFromTags != nil {
-					correlationIdPtr = correlationIdFromTags
-				}
-
-				err = db.Set(c, srv.dba, dto.MetadataCache{
-					ChatId:         chatId,
-					FileItemUuid:   fileItemUuid,
-					Filename:       filename,
-					OwnerId:        ownerId,
-					CorrelationId:  correlationIdPtr,
-					Published:      published,
-					FileSize:       *fileOjInfo.Size,
-					CreateDateTime: eventTime,
-					EditDateTime:   eventTime,
-				})
-				if err != nil {
-					srv.lgr.WithTracing(c).Errorf("Unable to create metadata cache for %v: %v", mcid.String(), err)
-					continue
-				}
+			var correlationIdPtr *string
+			if len(correlationId) > 0 {
+				correlationIdPtr = &correlationId
 			}
-			// we ignore the case when metadataCache differs from fileOjInfo
-			// because the checking would require get tags of each fileOjInfo
-			// it can be a performance slowdown
-			// tags -> published is the only thing which can differ, it will be synced when user press "[un]publish" button
+
+			eventTime := utils.GetEventTimeFromTimestamp(timestamp)
+
+			// use try* function for the case when there is no metadata (files were copied on the disk, so metadata wasn't preserved)
+			published, correlationIdFromTags := srv.tryGetTags(c, fileOjInfo)
+
+			if correlationIdFromTags != nil {
+				correlationIdPtr = correlationIdFromTags
+			}
+
+			toSave = append(toSave, dto.MetadataCache{
+				ChatId:         chatId,
+				FileItemUuid:   fileItemUuid,
+				Filename:       filename,
+				OwnerId:        ownerId,
+				CorrelationId:  correlationIdPtr,
+				Published:      published,
+				FileSize:       *fileOjInfo.Size,
+				CreateDateTime: eventTime,
+				EditDateTime:   eventTime,
+			})
+		}
+
+		err = db.SetList(c, srv.dba, toSave)
+		if err != nil {
+			srv.lgr.WithTracing(c).Errorf("Unable to save metadata cache: %v", err)
+			break
 		}
 
 		if len(lst.Contents) < maxFilesInBatch {
@@ -174,19 +157,20 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 
 	// remove metadata cache of removed files
 	srv.lgr.WithTracing(c).Infof("Checking for excess metadata cache items")
-	// TODO rewrite with NewListPaginationKeyset()
-	offset := 0
+
+	ks := db.NewListPaginationKeyset(dto.NoFileItemUuid, dto.NoCreateDateTime, dto.NoFileName, false, maxFilesInBatch)
+
 	for {
-		metadatas, err := db.GetList(c, srv.dba, dto.NoChatId, dto.NoFileItemUuid, nil, db.NewListPaginationOffset(utils.DefaultSize, offset), true)
+		metadatas, err := db.GetList(c, srv.dba, dto.NoChatId, dto.NoFileItemUuid, nil, ks, false)
 		if err != nil {
 			srv.lgr.WithTracing(c).Errorf("Error during paginate: %v", err)
 			return
 		}
 
-		wasDeletions := false
+		toRemove := []dto.MetadataCacheId{}
 		for _, metadata := range metadatas {
 			aKey := utils.BuildNormalizedKey(&metadata)
-			srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v'", aKey)
+			srv.lgr.WithTracing(c).Debugf("Start processing minio key '%v' for remove", aKey)
 			// TODO not very optimal
 			exists, _, err := srv.awsS3.FileExists(c, srv.minioBucketsConfig.Files, aKey)
 			if err != nil {
@@ -195,26 +179,32 @@ func (srv *ActualizeMetadataCacheService) processFiles(c context.Context, filena
 			}
 
 			if !exists {
-				srv.lgr.WithTracing(c).Infof("Will remove metadata cache for %v", aKey)
+				srv.lgr.WithTracing(c).Infof("Going to remove metadata cache for %v", aKey)
 				mcid := dto.MetadataCacheId{
 					ChatId:       metadata.ChatId,
 					FileItemUuid: metadata.FileItemUuid,
 					Filename:     metadata.Filename,
 				}
-				err := db.Remove(c, srv.dba, mcid)
-				if err != nil {
-					srv.lgr.WithTracing(c).Errorf("Error during removing metadata cache for %v: %v", mcid.String(), err)
-					continue
-				}
-				wasDeletions = true
+				toRemove = append(toRemove, mcid)
 			}
 		}
 
-		if !wasDeletions {
-			offset += utils.DefaultSize
+		err = db.RemoveList(c, srv.dba, toRemove)
+		if err != nil {
+			srv.lgr.WithTracing(c).Errorf("Error during removing metadata cache: %v", err)
+			return
 		}
-		if len(metadatas) < utils.DefaultSize {
+
+		if len(metadatas) < maxFilesInBatch {
 			break
+		} else {
+			if len(metadatas) >= 1 {
+				last := metadatas[len(metadatas)-1]
+				ks = db.NewListPaginationKeyset(last.FileItemUuid, &last.CreateDateTime, last.Filename, false, maxFilesInBatch)
+			} else {
+				srv.lgr.WithTracing(c).Warn("unexpected case")
+				break
+			}
 		}
 	}
 	srv.lgr.WithTracing(c).Infof("Checking for excess metadata cache items finished")
