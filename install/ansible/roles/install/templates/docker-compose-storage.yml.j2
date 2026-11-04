@@ -33,14 +33,13 @@ services:
         - "traefik.http.routers.storage-version-router.middlewares=storage-stripprefix-middleware"
     environment:
         - STORAGE_POSTGRESQL.URL=postgres://postgres:postgresqlPassword@postgresql-citus-coordinator-1:5432/storage?sslmode=disable&application_name=storage-app
-        # TODO rustfs add protocol
-        - STORAGE_MINIO.INTERNALENDPOINT=minio:9000
-        - STORAGE_MINIO.INTERCONTAINERURL=http://minio:9000
-        - STORAGE_MINIO.PRESIGNDOWNLOADTTL=24h
-        - STORAGE_MINIO.PRESIGNUPLOADTTL=24h
-        # TODO rustfs
-        - STORAGE_MINIO.ACCESSKEYID={{ minio_user }}
-        - STORAGE_MINIO.SECRETACCESSKEY={{ minio_password }}
+        - STORAGE_S3.INTERNALENDPOINT=http://rustfs:9000
+        - STORAGE_S3.INTERCONTAINERURL=http://rustfs:9000
+        - STORAGE_S3.PRESIGNDOWNLOADTTL=24h
+        - STORAGE_S3.PRESIGNUPLOADTTL=24h
+        - STORAGE_S3.ACCESSKEYID={{ s3_user }}
+        - STORAGE_S3.SECRETACCESSKEY={{ s3_password }}
+        - STORAGE_S3.LOCATION={{ s3_region }}
         - STORAGE_CHAT.URL.BASE=http://chat:1235
         - STORAGE_AAA.URL.BASE=http://aaa:8060
         - STORAGE_REDIS.ADDRESS=redis:6379
@@ -52,6 +51,7 @@ services:
         - STORAGE_LOGGER.WRITETOFILE=false
         - STORAGE_SCHEDULERS.CLEANFILESOFDELETEDCHATTASK.ENABLED=true
         - STORAGE_SCHEDULERS.ACTUALIZEGENERATEDFILESTASK.ENABLED=true
+        - STORAGE_SCHEDULERS.ACTUALIZEMETADATACACHETASK.ENABLED=true
         - STORAGE_LOGGER.LEVEL=info
 
     volumes:
