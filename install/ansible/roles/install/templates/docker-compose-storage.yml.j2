@@ -40,6 +40,9 @@ services:
         - STORAGE_S3.ACCESSKEYID={{ s3_user }}
         - STORAGE_S3.SECRETACCESSKEY={{ s3_password }}
         - STORAGE_S3.LOCATION={{ s3_region }}
+        - STORAGE_S3.EVENTLISTENER.AMQP.EXCHANGE={{ s3_amqp_exchange }}
+        - STORAGE_S3.EVENTLISTENER.AMQP.QUEUE={{ s3_amqp_queue }}
+        - STORAGE_S3.EVENTLISTENER.AMQP.ROUTINGKEY={{ s3_amqp_routingkey }}
         - STORAGE_CHAT.URL.BASE=http://chat:1235
         - STORAGE_AAA.URL.BASE=http://aaa:8060
         - STORAGE_REDIS.ADDRESS=redis:6379
