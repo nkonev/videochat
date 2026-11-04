@@ -65,7 +65,7 @@ s3:
     files: "files"
     filesPreview: "files-preview"
   delete:
-    # 1000 is maximun availabale for delete in S3 API
+    # 1000 is maximum availabale for delete in S3 API
     batch: 1000
   eventListener:
     amqp:
@@ -112,13 +112,13 @@ schedulers:
     expiration: "30m"
     # minimum chats count to start this task
     chatCount: 100
-    # 1000 is maximun availabale for delete in S3 API
+    # 1000 is maximum availabale for delete in S3 API
     batch: 1000
   actualizeGeneratedFilesTask:
     enabled: true
     cron: "0 * * * * *"
     expiration: "30m"
-    # 1000 is maximun availabale for delete in S3 API
+    # 1000 is maximum availabale for delete in S3 API
     batch: 1000
   actualizeMetadataCacheTask:
     enabled: true
@@ -126,7 +126,7 @@ schedulers:
     expiration: "30m"
     # admin user id
     fallbackOwnerId: 1
-    # 1000 is maximun availabale for delete in S3 API
+    # 1000 is maximum availabale for delete in S3 API
     batch: 1000
 
 response:
