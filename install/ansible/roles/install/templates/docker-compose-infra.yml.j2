@@ -171,8 +171,8 @@ services:
       - RUSTFS_NOTIFY_ENABLE=true
       - RUSTFS_NOTIFY_AMQP_ENABLE_PRIMARY=true
       - RUSTFS_NOTIFY_AMQP_URL_PRIMARY=amqp://videoChat:videoChatPazZw0rd@rabbitmq:5672
-      - RUSTFS_NOTIFY_AMQP_EXCHANGE_PRIMARY=rustfs-events
-      - RUSTFS_NOTIFY_AMQP_ROUTING_KEY=routingkey1
+      - RUSTFS_NOTIFY_AMQP_EXCHANGE_PRIMARY={{ s3_amqp_exchange }}
+      - RUSTFS_NOTIFY_AMQP_ROUTING_KEY={{ s3_amqp_routingkey }}
       - RUSTFS_NOTIFY_AMQP_MANDATORY_PRIMARY=true
       - RUSTFS_NOTIFY_AMQP_PERSISTENT_PRIMARY=true
     volumes:

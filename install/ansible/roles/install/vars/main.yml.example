@@ -5,6 +5,10 @@ old_domain: "old.example.com" # optional
 domain: "example.com"
 s3_user: "AKIAIOSFODNN7EXAMPLE"
 s3_password: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+s3_region: "europe-east"
+s3_amqp_exchange: "rustfs-events"
+s3_amqp_queue: "storage-s3-file-bucket"
+s3_amqp_routingkey: "routingkey1"
 initial_admin_password: "admin"
 initial_admin_password_salt: "salt012345678901234567" # should be 22-character, https://docs.ansible.com/ansible/latest/collections/ansible/builtin/password_hash_filter.html
 mail_host: "smtp.example.com"

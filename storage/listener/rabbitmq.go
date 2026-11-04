@@ -2,15 +2,14 @@ package listener
 
 import (
 	"context"
+
 	"github.com/beliyav/go-amqp-reconnect/rabbitmq"
+	"github.com/spf13/viper"
 	"github.com/streadway/amqp"
 	"go.uber.org/fx"
 	"nkonev.name/storage/logger"
 	myRabbit "nkonev.name/storage/rabbitmq"
 )
-
-// see AMQP minio's endpoint in docker-compose
-const MinioEventsExchange = "rustfs-events"
 
 type FanoutNotificationsChannel struct{ *rabbitmq.Channel }
 
@@ -56,7 +55,10 @@ func createAndBind(lgr *logger.Logger, name string, key string, exchange string,
 }
 
 func CreateMinioEventsChannel(lgr *logger.Logger, connection *rabbitmq.Connection, onMessage MinioEventsListener, lc fx.Lifecycle) FanoutNotificationsChannel {
-	var queueName = "storage-s3-file-bucket"
+	var amqpQueueName = viper.GetString("s3.eventListener.amqp.queue")
+	// see AMQP rustfs's endpoint in docker-compose
+	var amqpExchange = viper.GetString("s3.eventListener.amqp.exchange")
+	var amqpRoutingKey = viper.GetString("s3.eventListener.amqp.routingKey")
 
 	return FanoutNotificationsChannel{myRabbit.CreateRabbitMqChannelWithCallback(
 		lgr,
@@ -64,17 +66,17 @@ func CreateMinioEventsChannel(lgr *logger.Logger, connection *rabbitmq.Connectio
 		func(channel *rabbitmq.Channel) error {
 			lc.Append(fx.Hook{
 				OnStop: func(ctx context.Context) error {
-					lgr.Infof("Stopping queue listening '%v'", queueName)
+					lgr.Infof("Stopping queue listening '%v'", amqpQueueName)
 					return channel.Close()
 				},
 			})
 
-			err := channel.ExchangeDeclare(MinioEventsExchange, "direct", true, false, false, false, nil)
+			err := channel.ExchangeDeclare(amqpExchange, "direct", true, false, false, false, nil)
 			if err != nil {
 				return err
 			}
 
-			aQueue := createAndBind(lgr, queueName, "routingkey1", MinioEventsExchange, channel)
+			aQueue := createAndBind(lgr, amqpQueueName, amqpRoutingKey, amqpExchange, channel)
 			listen(lgr, channel, aQueue, onMessage, lc)
 			return nil
 		},
