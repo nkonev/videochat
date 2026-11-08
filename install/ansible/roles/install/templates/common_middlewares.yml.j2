@@ -12,6 +12,8 @@ http:
           - "Cookie"
           - "uber-trace-id"
         authResponseHeadersRegex: "^X-Auth-"
+        maxResponseBodySize: 256
+        trustForwardHeader: false
     noaccept-header-auth-middleware:
       forwardAuth:
         address: "http://aaa:8060/internal/profile/auth"
@@ -20,6 +22,8 @@ http:
           - "Cookie"
           - "uber-trace-id"
         authResponseHeadersRegex: "^X-Auth-"
+        maxResponseBodySize: 256
+        trustForwardHeader: false
     redirect-to-https:
       redirectScheme:
         scheme: https

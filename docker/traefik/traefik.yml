@@ -5,8 +5,12 @@ global:
 entryPoints:
   http:
     address: :8081
+    http:
+      aliasHeadersStrategy: delete
   traefik:
     address: :8080
+    http:
+      aliasHeadersStrategy: delete
 providers:
   providersThrottleDuration: 2s
   docker:

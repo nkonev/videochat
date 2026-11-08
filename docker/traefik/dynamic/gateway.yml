@@ -292,6 +292,8 @@ http:
           - "Cookie"
           - "uber-trace-id"
         authResponseHeadersRegex: "^X-Auth-"
+        maxResponseBodySize: 256
+        trustForwardHeader: false
     noaccept-header-auth-middleware:
       forwardAuth:
         address: "http://host.docker.internal:8060/internal/profile/auth"
@@ -300,3 +302,5 @@ http:
           - "Cookie"
           - "uber-trace-id"
         authResponseHeadersRegex: "^X-Auth-"
+        maxResponseBodySize: 256
+        trustForwardHeader: false

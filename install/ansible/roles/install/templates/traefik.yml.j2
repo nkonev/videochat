@@ -5,6 +5,8 @@ global:
 entryPoints:
   http:
     address: :80
+    http:
+      aliasHeadersStrategy: delete
   https:
     address: :443
     transport:
@@ -12,8 +14,12 @@ entryPoints:
       respondingTimeouts:
         readTimeout: 240s
       keepAliveMaxTime: 240s
+    http:
+      aliasHeadersStrategy: delete
   traefik:
     address: :8080
+    http:
+      aliasHeadersStrategy: delete
 providers:
   providersThrottleDuration: 2s
   swarm:
