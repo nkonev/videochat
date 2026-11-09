@@ -39,6 +39,7 @@ func CleanDeletedUserDataScheduler(
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.cleanDeletedUsersData"),
 		postgresLock.WithKeys(utils.PostgresLockIdKeyChat, utils.PostgresLockIdKeyCleanDeletedUserData),
+		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunning),
 	)
 
 	return &CleanDeletedUserDataTask{job}

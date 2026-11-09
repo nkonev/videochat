@@ -35,6 +35,7 @@ func ActualizeGeneratedFilesScheduler(
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.ActualizeGeneratedFiles"),
 		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
+		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunning),
 	)
 
 	return &ActualizeGeneratedFilesTask{job}

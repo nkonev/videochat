@@ -66,6 +66,7 @@ func UsersInVideoStatusNotifierScheduler(
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.UsersInVideoStatusNotifier"),
 		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
+		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunning),
 	)
 
 	return &UsersInVideoStatusNotifierTask{job}

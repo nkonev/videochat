@@ -35,6 +35,7 @@ func CleanFilesOfDeletedChatScheduler(
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.cleanFilesOfDeletedChat"),
 		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
+		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunning),
 	)
 
 	return &CleanFilesOfDeletedChatTask{job}
