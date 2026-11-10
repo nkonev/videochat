@@ -10,7 +10,7 @@ require (
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/minio/minio-go/v7 v7.0.95
-	github.com/nkonev/dcron v1.9.1
+	github.com/nkonev/dcron v1.9.2
 	github.com/nkonev/dcron/plugin/lock/redis v1.2.1
 	github.com/nkonev/dcron/plugin/trace/otel v1.2.0
 	github.com/prometheus/common v0.55.0
