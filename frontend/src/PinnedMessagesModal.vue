@@ -105,7 +105,7 @@ import axios from "axios";
 import { hasLength } from "./utils";
 import { getHumanReadableDate } from "@/date.js";
 import {chat, chat_name, messageIdHashPrefix, video_suffix, videochat_name} from "@/router/routes";
-import pageableModalMixin, {pageSize} from "@/mixins/pageableModalMixin.js";
+import pageableModalMixin, {pageSize, firstPage} from "@/mixins/pageableModalMixin.js";
 import debounce from "lodash/debounce.js";
 import PinnedMessagesContextMenu from "@/PinnedMessagesContextMenu.vue";
 
@@ -198,7 +198,11 @@ export default {
                 })
             }
 
-            this.onItemCreatedEvent(dto);
+            if (this.page == firstPage) {
+                this.onItemCreatedEvent(dto);
+            } else {
+                this.onItemUpdatedEvent(dto);
+            }
         },
         isVideoRoute() {
             return this.$route.name == videochat_name
