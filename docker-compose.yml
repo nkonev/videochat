@@ -309,7 +309,7 @@ services:
         max-file: "1"
 
   victoria-logs:
-    image: docker.io/victoriametrics/victoria-logs:v1.50.0
+    image: docker.io/victoriametrics/victoria-logs:v1.54.0
     restart: unless-stopped
     hostname: victoria-logs
     ports:
