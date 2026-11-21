@@ -203,13 +203,25 @@ func (t topicKind) String() string {
 	return "unknown"
 }
 
+const noTimeout time.Duration = -1
+
 func WaitForAllEventsProcessedChat(
 	lgr *logger.LoggerWrapper,
 	cfg *config.AppConfig,
 	admCl *kadm.Client,
 	lc fx.Lifecycle,
 ) error {
-	return waitForAllEventsProcessed(lgr, cfg, admCl, lc, topicKindChat)
+	return WaitForAllEventsProcessedChatWithTimeout(lgr, cfg, admCl, lc, noTimeout)
+}
+
+func WaitForAllEventsProcessedChatWithTimeout(
+	lgr *logger.LoggerWrapper,
+	cfg *config.AppConfig,
+	admCl *kadm.Client,
+	lc fx.Lifecycle,
+	tm time.Duration,
+) error {
+	return waitForAllEventsProcessed(lgr, cfg, admCl, lc, topicKindChat, tm)
 }
 
 func WaitForAllEventsProcessedUser(
@@ -218,7 +230,17 @@ func WaitForAllEventsProcessedUser(
 	admCl *kadm.Client,
 	lc fx.Lifecycle,
 ) error {
-	return waitForAllEventsProcessed(lgr, cfg, admCl, lc, topicKindUser)
+	return WaitForAllEventsProcessedUserWithTimeout(lgr, cfg, admCl, lc, noTimeout)
+}
+
+func WaitForAllEventsProcessedUserWithTimeout(
+	lgr *logger.LoggerWrapper,
+	cfg *config.AppConfig,
+	admCl *kadm.Client,
+	lc fx.Lifecycle,
+	tm time.Duration,
+) error {
+	return waitForAllEventsProcessed(lgr, cfg, admCl, lc, topicKindUser, tm)
 }
 
 // https://github.com/IBM/sarama/wiki/Frequently-Asked-Questions#how-do-i-consume-until-the-end-of-a-partition
@@ -228,6 +250,7 @@ func waitForAllEventsProcessed(
 	admCl *kadm.Client,
 	lc fx.Lifecycle,
 	topicKind topicKind,
+	tm time.Duration,
 ) error {
 	stoppingCtx, cancelFunc := context.WithCancel(context.Background())
 
@@ -241,9 +264,17 @@ func waitForAllEventsProcessed(
 
 	du := cfg.Cqrs.CheckAreEventsProcessedInterval
 
+	if tm > 0 {
+		timeoutCtx1, cancelFn := context.WithTimeout(stoppingCtx, tm)
+		defer cancelFn()
+
+		stoppingCtx = timeoutCtx1
+	}
+
 	for {
 		lgr.Info("Checking for the current offsets will be equal to the latest ones for all partitions", "topic_kind", topicKind.String())
-		isEnd, errE := isEndOnAllPartitions(lgr, cfg, admCl, topicKind)
+		ctx := context.Background() // in order to close client gracefully
+		isEnd, errE := isEndOnAllPartitions(ctx, lgr, cfg, admCl, topicKind)
 		if errE != nil {
 			lgr.Error("Error during checking isEndOnAllPartitions", logger.AttributeError, errE)
 			return errE
@@ -256,8 +287,11 @@ func waitForAllEventsProcessed(
 		}
 
 		if errors.Is(stoppingCtx.Err(), context.Canceled) {
-			lgr.Info("Exiting from waiter", "topic_kind", topicKind.String())
+			lgr.Info("Exiting from waiter normally", "topic_kind", topicKind.String())
 			break
+		} else if errors.Is(stoppingCtx.Err(), context.DeadlineExceeded) {
+			lgr.Info("Exiting from waiter due to deadline", "topic_kind", topicKind.String())
+			return stoppingCtx.Err()
 		} else {
 			lgr.Info("Will wait before the next check iteration", "duration", du, "topic_kind", topicKind.String())
 			time.Sleep(du)
@@ -268,6 +302,7 @@ func waitForAllEventsProcessed(
 }
 
 func getMaxOffsets(
+	ctx context.Context,
 	lgr *logger.LoggerWrapper,
 	cfg *config.AppConfig,
 	admCl *kadm.Client,
@@ -285,7 +320,7 @@ func getMaxOffsets(
 
 	maxOffsets := make([]int64, ktc.NumPartitions)
 
-	lo, err := admCl.ListEndOffsets(context.Background(), ktc.Topic)
+	lo, err := admCl.ListEndOffsets(ctx, ktc.Topic)
 	if err != nil {
 		return maxOffsets, err
 	}
@@ -303,12 +338,13 @@ func getMaxOffsets(
 }
 
 func isEndOnAllPartitions(
+	ctx context.Context,
 	lgr *logger.LoggerWrapper,
 	cfg *config.AppConfig,
 	admCl *kadm.Client,
 	topicKind topicKind,
 ) (bool, error) {
-	maxOffsets, err := getMaxOffsets(lgr, cfg, admCl, topicKind)
+	maxOffsets, err := getMaxOffsets(ctx, lgr, cfg, admCl, topicKind)
 	if err != nil {
 		if errors.Is(err, kerr.NotLeaderForPartition) {
 			return false, nil
@@ -342,7 +378,7 @@ func isEndOnAllPartitions(
 		return false, fmt.Errorf("Unknown topicKind: %v", topicKind)
 	}
 
-	ofs, err := admCl.FetchOffsetsForTopics(context.Background(), consumerGroup, ktc.Topic)
+	ofs, err := admCl.FetchOffsetsForTopics(ctx, consumerGroup, ktc.Topic)
 	if err != nil {
 		if errors.Is(err, kerr.UnknownTopicOrPartition) {
 			return false, nil
@@ -392,8 +428,9 @@ func Export(
 	admCl *kadm.Client,
 ) error {
 	lgr.Info("Start export function")
+	ctx := context.Background()
 
-	maxOffsets, err := getMaxOffsets(lgr, cfg, admCl, topicKindChat)
+	maxOffsets, err := getMaxOffsets(ctx, lgr, cfg, admCl, topicKindChat)
 	if err != nil {
 		return err
 	}
@@ -441,8 +478,6 @@ func Export(
 			defer f.Close()
 		}
 	}
-
-	ctx := context.Background()
 
 	hasUnfinishedPartition := func() bool {
 		for _, p := range finishedPartitions {

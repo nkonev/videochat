@@ -73,8 +73,8 @@ func TestUnreads(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionAvatar(&avatar, &avatarBig))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -82,8 +82,8 @@ func TestUnreads(t *testing.T) {
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1Chats, _, err := deps.testRestClient.GetChats(ctx, user1)
 			require.NoError(t, err, "error in getting chats")
@@ -122,8 +122,8 @@ func TestUnreads(t *testing.T) {
 			// 2 separate calls to guarantee order
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -150,8 +150,8 @@ func TestUnreads(t *testing.T) {
 
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user3})
 			require.NoError(t, err, "error in adding participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			chat1Participants, _, err := deps.testRestClient.GetChatParticipants(ctx, user1, chat1Id)
 			require.NoError(t, err, "error in chat participants")
@@ -189,8 +189,8 @@ func TestUnreads(t *testing.T) {
 
 			err = deps.testRestClient.ReadMessage(ctx, user2, chat1Id, message1.Id)
 			require.NoError(t, err, "error in reading message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -239,8 +239,8 @@ func TestUnreads(t *testing.T) {
 			const message2Text = "new message 2"
 			messageId2, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message2Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -271,8 +271,8 @@ func TestUnreads(t *testing.T) {
 			messageId3, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message3Text)
 			require.NoError(t, err, "error in creating message")
 			assert.True(t, messageId3 > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2ChatsNew3, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -298,8 +298,8 @@ func TestUnreads(t *testing.T) {
 
 			err = deps.testRestClient.DeleteMessage(ctx, user1, chat1Id, messageId3)
 			require.NoError(t, err, "error in delete message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -350,8 +350,8 @@ func TestUnreads(t *testing.T) {
 
 			err = deps.testRestClient.PutUserChatNotificationSettings(ctx, user2, chat1Id, false)
 			require.NoError(t, err, "error in setting contribute into has new messages")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2ChatsNew40, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -364,8 +364,8 @@ func TestUnreads(t *testing.T) {
 			messageId4, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, "msg 4")
 			require.NoError(t, err, "error in creating message")
 			assert.True(t, messageId4 > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2ChatsNew41, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -386,8 +386,8 @@ func TestUnreads(t *testing.T) {
 
 			err = deps.testRestClient.PutUserChatNotificationSettings(ctx, user2, chat1Id, true) // restore
 			require.NoError(t, err, "error in setting contribute into has new messages")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2ChatsNew42, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -409,8 +409,8 @@ func TestUnreads(t *testing.T) {
 			require.NoError(t, err, "error in delete message")
 			err = deps.testRestClient.DeleteMessage(ctx, user1, chat1Id, message1Id)
 			require.NoError(t, err, "error in delete message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -450,8 +450,8 @@ func TestUnreads(t *testing.T) {
 			messageId5, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, "msg 5")
 			require.NoError(t, err, "error in creating message")
 			assert.True(t, messageId5 > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2ChatsNew52, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -467,8 +467,8 @@ func TestUnreads(t *testing.T) {
 
 			err = deps.testRestClient.ReadMessage(ctx, user2, chat1Id, messageId5)
 			require.NoError(t, err, "error in reading message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2ChatsNew53, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -484,8 +484,8 @@ func TestUnreads(t *testing.T) {
 
 			err = deps.testRestClient.DeleteMessage(ctx, user1, chat1Id, messageId5)
 			require.NoError(t, err, "error in delete message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2ChatsNew54, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -503,8 +503,8 @@ func TestUnreads(t *testing.T) {
 			messageId6, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, "msg 6")
 			require.NoError(t, err, "error in creating message")
 			assert.True(t, messageId6 > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2ChatsNew61, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -561,15 +561,15 @@ func TestUnreadsInitFromEmptyChatOfBothUsers(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const message1Text = "new message 1"
 
 			_, err = deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1HasUnreadMessages1, err := deps.testRestClient.GetHasUnreadMessages(ctx, user1)
 			require.NoError(t, err, "error in getting has unread messages")
@@ -583,8 +583,8 @@ func TestUnreadsInitFromEmptyChatOfBothUsers(t *testing.T) {
 
 			_, err = deps.testRestClient.CreateMessage(ctx, user2, chat1Id, message2Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1HasUnreadMessages2, err := deps.testRestClient.GetHasUnreadMessages(ctx, user1)
 			require.NoError(t, err, "error in getting has unread messages")
@@ -594,8 +594,8 @@ func TestUnreadsInitFromEmptyChatOfBothUsers(t *testing.T) {
 
 			_, err = deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message3Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1HasUnreadMessages3, err := deps.testRestClient.GetHasUnreadMessages(ctx, user1)
 			require.NoError(t, err, "error in getting has unread messages")
@@ -646,36 +646,36 @@ func TestReadAllChats(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const message11Text = "new message 11"
 			const message12Text = "new message 12"
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message11Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			assert.True(t, message1Id > 0)
 
 			chat2Id, err := deps.testRestClient.CreateChat(ctx, user1, chat2Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat2Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			message2Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat2Id, message12Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			assert.True(t, message2Id > 0)
 
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat2Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2Chats, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -691,8 +691,8 @@ func TestReadAllChats(t *testing.T) {
 
 			err = deps.testRestClient.MarkAllChatsAsRead(ctx, user2)
 			require.NoError(t, err, "error in read all messages")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -775,36 +775,36 @@ func TestReadOneChat(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const message11Text = "new message 11"
 			const message12Text = "new message 12"
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message11Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			assert.True(t, message1Id > 0)
 
 			chat2Id, err := deps.testRestClient.CreateChat(ctx, user1, chat2Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat2Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			message2Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat2Id, message12Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			assert.True(t, message2Id > 0)
 
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat2Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2Chats, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -820,8 +820,8 @@ func TestReadOneChat(t *testing.T) {
 
 			err = deps.testRestClient.MarkChatAsRead(ctx, user2, chat1Id)
 			require.NoError(t, err, "error in read all messages")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -855,8 +855,8 @@ func TestReadOneChat(t *testing.T) {
 
 			err = deps.testRestClient.MarkChatAsRead(ctx, user2, chat2Id)
 			require.NoError(t, err, "error in read all messages")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -931,20 +931,20 @@ func TestReaction(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const message11Text = "new message 11"
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message11Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			assert.True(t, message1Id > 0)
 
 			const reaction = "😀"
@@ -952,8 +952,8 @@ func TestReaction(t *testing.T) {
 			// both users add the reaction
 			err = deps.testRestClient.Reaction(ctx, user1, chat1Id, message1Id, reaction)
 			require.NoError(t, err, "error in reacting on message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
 					e, ok := ee.(*dto.ChatEvent)
@@ -984,8 +984,8 @@ func TestReaction(t *testing.T) {
 
 			err = deps.testRestClient.Reaction(ctx, user2, chat1Id, message1Id, reaction)
 			require.NoError(t, err, "error in reacting on message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
 					e, ok := ee.(*dto.ChatEvent)
@@ -1031,8 +1031,8 @@ func TestReaction(t *testing.T) {
 			// user 2 flips - decreases reaction's count
 			err = deps.testRestClient.Reaction(ctx, user2, chat1Id, message1Id, reaction)
 			require.NoError(t, err, "error in reacting on message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			chat1MessagesNew, _, err := deps.testRestClient.GetMessages(ctx, user1, chat1Id)
 			require.NoError(t, err, "error in getting messages")
@@ -1050,8 +1050,8 @@ func TestReaction(t *testing.T) {
 			// user 1 flips - removes the reaction
 			err = deps.testRestClient.Reaction(ctx, user1, chat1Id, message1Id, reaction)
 			require.NoError(t, err, "error in reacting on message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -1125,8 +1125,8 @@ func TestCreateTetATetChat(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateTetATetChat(ctx, user1, user2)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1Chats, _, err := deps.testRestClient.GetChats(ctx, user1)
 			require.NoError(t, err, "error in getting chats")
@@ -1197,14 +1197,14 @@ func TestResendMessage(t *testing.T) {
 			chat2Id, err := deps.testRestClient.CreateChat(ctx, user2, chat2Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat2Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// user 1 adds user 2 to chat 1
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participant")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// assert user 2 sees both chats
 			user2ChatsNew, _, err := deps.testRestClient.GetChats(ctx, user2)
@@ -1220,14 +1220,14 @@ func TestResendMessage(t *testing.T) {
 			// user 1 creates a message
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// user 2 resends the message from chat 1 to chat 2
 			message1ResentId, err := deps.testRestClient.CreateMessage(ctx, user2, chat2Id, dto.NoMessageContent, client.NewMessageCreateOptionResend(chat1Id, message1Id))
 			require.NoError(t, err, "error in resending message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// assert that chat 2 contains the embed message
 			chat2Messages, _, err := deps.testRestClient.GetMessages(ctx, user2, chat2Id)
@@ -1250,16 +1250,16 @@ func TestResendMessage(t *testing.T) {
 			// user 1 changes original message
 			err = deps.testRestClient.EditMessage(ctx, user1, chat1Id, message1Id, message1TextNew)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			deps.testOutputEventsAccumulator.Clean()
 
 			// user 2 synchronizes the resend message
 			err = deps.testRestClient.SyncMessage(ctx, user2, chat2Id, message1ResentId)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// assert there is message edit with the new embed content
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
@@ -1357,14 +1357,14 @@ func TestReplyMessage(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// user 1 adds user 2 to chat 1
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participant")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// assert user 2 sees chat 1
 			user2ChatsNew, _, err := deps.testRestClient.GetChats(ctx, user2)
@@ -1377,16 +1377,16 @@ func TestReplyMessage(t *testing.T) {
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user2, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const message2Text = "It is a reply"
 
 			// user 1 replies on the message of user 2
 			message2ResentId, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message2Text, client.NewMessageCreateOptionReply(message1Id))
 			require.NoError(t, err, "error in resending message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// assert that chat 1 contains the embed message
 			{
@@ -1407,8 +1407,8 @@ func TestReplyMessage(t *testing.T) {
 			const message2TextNew = "It is a reply new"
 			err = deps.testRestClient.EditMessage(ctx, user1, chat1Id, message2ResentId, message2TextNew, client.NewMessageCreateOptionReply(message1Id))
 			require.NoError(t, err, "error in resending message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// assert that chat 1 contains the embed message
 			{
@@ -1430,14 +1430,14 @@ func TestReplyMessage(t *testing.T) {
 			const message1TextNew = "It is a new original"
 			err = deps.testRestClient.EditMessage(ctx, user2, chat1Id, message1Id, message1TextNew)
 			require.NoError(t, err, "error in resending message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// user 1 synchronizes the resend message
 			err = deps.testRestClient.SyncMessage(ctx, user1, chat1Id, message2ResentId)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// assert
 			{
@@ -1459,8 +1459,8 @@ func TestReplyMessage(t *testing.T) {
 			const message2TextNewest = "It is a view without reply"
 			err = deps.testRestClient.EditMessage(ctx, user1, chat1Id, message2ResentId, message2TextNewest)
 			require.NoError(t, err, "error in resending message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// assert that chat 1 contains the embed message
 			{
@@ -1517,8 +1517,8 @@ func TestMentionNotification(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// assert user 2 sees chat 1
 			user2ChatsNew, _, err := deps.testRestClient.GetChats(ctx, user2)
@@ -1532,8 +1532,8 @@ func TestMentionNotification(t *testing.T) {
 
 				message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 				require.NoError(t, err, "error in creating message")
-				require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-				require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 				t.Run("add_mention", func(t *testing.T) {
 					deps.testOutputEventsAccumulator.Clean()
@@ -1544,8 +1544,8 @@ func TestMentionNotification(t *testing.T) {
 
 					err = deps.testRestClient.EditMessage(ctx, user1, chat1Id, message1Id, message1TextNew)
 					require.NoError(t, err, "error in resending message")
-					require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-					require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+					require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+					require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 					require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 						func(ee any) bool {
@@ -1579,8 +1579,8 @@ func TestMentionNotification(t *testing.T) {
 					// edit and remove the mention
 					err = deps.testRestClient.EditMessage(ctx, user1, chat1Id, message1Id, message1Text)
 					require.NoError(t, err, "error in resending message")
-					require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-					require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+					require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+					require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 					require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 						func(ee any) bool {
@@ -1615,8 +1615,8 @@ func TestMentionNotification(t *testing.T) {
 
 				message2Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message2Text)
 				require.NoError(t, err, "error in creating message")
-				require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-				require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 				require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 					func(ee any) bool {
@@ -1648,8 +1648,8 @@ func TestMentionNotification(t *testing.T) {
 				// read the message
 				err = deps.testRestClient.ReadMessage(ctx, user2, chat1Id, message2Id)
 				require.NoError(t, err, "error in reading message")
-				require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-				require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 				require.NoError(t, deps.testNotificationEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 					func(ee any) bool {
@@ -1705,21 +1705,21 @@ func TestReplyNotification(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const message1Text = "hi there1"
 			const message2Text = "hi there2"
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			message2Id, err := deps.testRestClient.CreateMessage(ctx, user2, chat1Id, message2Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			t.Run("edit_message", func(t *testing.T) {
 				deps.testOutputEventsAccumulator.Clean()
@@ -1728,8 +1728,8 @@ func TestReplyNotification(t *testing.T) {
 				const message2TextNew = "It is a reply new2"
 				err = deps.testRestClient.EditMessage(ctx, user2, chat1Id, message2Id, message2TextNew, client.NewMessageCreateOptionReply(message1Id))
 				require.NoError(t, err, "error in resending message")
-				require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-				require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 				require.NoError(t, deps.testNotificationEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 					func(ee any) bool {
@@ -1749,8 +1749,8 @@ func TestReplyNotification(t *testing.T) {
 
 				err = deps.testRestClient.ReadMessage(ctx, user1, chat1Id, message2Id)
 				require.NoError(t, err, "error in reading message")
-				require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-				require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 				require.NoError(t, deps.testNotificationEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 					func(ee any) bool {
@@ -1805,15 +1805,15 @@ func TestReactionNotification(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const message1Text = "hi there1"
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const reaction = "😀"
 
@@ -1824,8 +1824,8 @@ func TestReactionNotification(t *testing.T) {
 				// user adds the reaction
 				err = deps.testRestClient.Reaction(ctx, user2, chat1Id, message1Id, reaction)
 				require.NoError(t, err, "error in reacting on message")
-				require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-				require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 				require.NoError(t, deps.testNotificationEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 					func(ee any) bool {
@@ -1847,8 +1847,8 @@ func TestReactionNotification(t *testing.T) {
 				// read the message
 				err = deps.testRestClient.ReadMessage(ctx, user1, chat1Id, message1Id)
 				require.NoError(t, err, "error in reading message")
-				require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-				require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 				require.NoError(t, deps.testNotificationEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 					func(ee any) bool {
@@ -1905,8 +1905,8 @@ func TestBrowserNotification(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			var message1Id int64
 
@@ -1918,8 +1918,8 @@ func TestBrowserNotification(t *testing.T) {
 
 				message1Id, err = deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 				require.NoError(t, err, "error in creating message")
-				require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-				require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 				require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 					func(ee any) bool {
@@ -1954,8 +1954,8 @@ func TestBrowserNotification(t *testing.T) {
 				// read the message
 				err = deps.testRestClient.ReadMessage(ctx, user2, chat1Id, message1Id)
 				require.NoError(t, err, "error in reading message")
-				require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-				require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 				require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 					func(ee any) bool {
@@ -2011,8 +2011,8 @@ func TestPinChat(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -2020,8 +2020,8 @@ func TestPinChat(t *testing.T) {
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1Chats, _, err := deps.testRestClient.GetChats(ctx, user1)
 			require.NoError(t, err, "error in getting chats")
@@ -2044,8 +2044,8 @@ func TestPinChat(t *testing.T) {
 
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			chat1Participants, _, err := deps.testRestClient.GetChatParticipants(ctx, user1, chat1Id)
 			require.NoError(t, err, "error in chat participants")
@@ -2065,8 +2065,8 @@ func TestPinChat(t *testing.T) {
 
 			err = deps.testRestClient.PinChat(ctx, user1, chat1Id, true)
 			require.NoError(t, err, "error in pinning chats")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -2148,8 +2148,8 @@ func TestCreateChat(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 				func(ee any) bool {
@@ -2224,8 +2224,8 @@ func TestCreateChatWithMultipleParticipants(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -2298,13 +2298,13 @@ func TestEditChatWithAddingParticipants(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			err = deps.testRestClient.EditChat(ctx, user1, chat1Id, chat1NewName, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in changing chat")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 				// caused by CreateChat()
@@ -2389,8 +2389,8 @@ func TestDeleteChat(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -2427,8 +2427,8 @@ func TestDeleteChat(t *testing.T) {
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1Chats, _, err := deps.testRestClient.GetChats(ctx, user1)
 			require.NoError(t, err, "error in getting chats")
@@ -2463,8 +2463,8 @@ func TestDeleteChat(t *testing.T) {
 
 			err = deps.testRestClient.DeleteChat(ctx, user1, chat1Id)
 			require.NoError(t, err, "error in removing chats")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1ChatsNew2, _, err := deps.testRestClient.GetChats(ctx, user1)
 			require.NoError(t, err, "error in getting chats")
@@ -2538,8 +2538,8 @@ func TestAddParticipant(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -2547,8 +2547,8 @@ func TestAddParticipant(t *testing.T) {
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1Chats, _, err := deps.testRestClient.GetChats(ctx, user1)
 			require.NoError(t, err, "error in getting chats")
@@ -2572,8 +2572,8 @@ func TestAddParticipant(t *testing.T) {
 
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			chat1Participants, _, err := deps.testRestClient.GetChatParticipants(ctx, user1, chat1Id)
 			require.NoError(t, err, "error in chat participants")
@@ -2607,8 +2607,8 @@ func TestAddParticipant(t *testing.T) {
 
 			err = deps.testRestClient.EditChat(ctx, user1, chat1Id, chat1NewName, client.NewChatOptionAvatar(&avatar, &avatarBig))
 			require.NoError(t, err, "error in changing chat")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				// caused by EditChat
@@ -2722,8 +2722,8 @@ func TestDeleteParticipant(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -2731,8 +2731,8 @@ func TestDeleteParticipant(t *testing.T) {
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1Chats, _, err := deps.testRestClient.GetChats(ctx, user1)
 			require.NoError(t, err, "error in getting chats")
@@ -2756,8 +2756,8 @@ func TestDeleteParticipant(t *testing.T) {
 
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			chat1Participants, _, err := deps.testRestClient.GetChatParticipants(ctx, user1, chat1Id)
 			require.NoError(t, err, "error in chat participants")
@@ -2782,8 +2782,8 @@ func TestDeleteParticipant(t *testing.T) {
 
 			err = deps.testRestClient.DeleteChatParticipants(ctx, user1, chat1Id, user2)
 			require.NoError(t, err, "error in removing chat participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user2ChatsNew2, _, err := deps.testRestClient.GetChats(ctx, user2)
 			require.NoError(t, err, "error in getting chats")
@@ -2849,8 +2849,8 @@ func TestLeaveFromChat(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -2858,8 +2858,8 @@ func TestLeaveFromChat(t *testing.T) {
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1Chats, _, err := deps.testRestClient.GetChats(ctx, user1)
 			require.NoError(t, err, "error in getting chats")
@@ -2883,8 +2883,8 @@ func TestLeaveFromChat(t *testing.T) {
 
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			chat1Participants, _, err := deps.testRestClient.GetChatParticipants(ctx, user1, chat1Id)
 			require.NoError(t, err, "error in chat participants")
@@ -2911,8 +2911,8 @@ func TestLeaveFromChat(t *testing.T) {
 
 			err = deps.testRestClient.LeaveChat(ctx, user2, chat1Id)
 			require.NoError(t, err, "error in removing chat participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 
@@ -3017,8 +3017,8 @@ func TestAddChangeAndDeleteParticipant(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -3037,8 +3037,8 @@ func TestAddChangeAndDeleteParticipant(t *testing.T) {
 
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 				// caused by AddChatParticipants
@@ -3113,8 +3113,8 @@ func TestAddChangeAndDeleteParticipant(t *testing.T) {
 
 			err = deps.testRestClient.ChangeChatParticipant(ctx, user1, chat1Id, user2, true)
 			require.NoError(t, err, "error in changing chat participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			chat1Participants2, _, err := deps.testRestClient.GetChatParticipants(ctx, user1, chat1Id)
 			require.NoError(t, err, "error in chat participants")
@@ -3172,8 +3172,8 @@ func TestAddChangeAndDeleteParticipant(t *testing.T) {
 
 			err = deps.testRestClient.DeleteChatParticipants(ctx, user1, chat1Id, user2)
 			require.NoError(t, err, "error in removing chat participants")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 				func(ee any) bool {
@@ -3255,15 +3255,15 @@ func TestCreateMessage(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			deps.testOutputEventsAccumulator.Clean()
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			assert.True(t, message1Id > 0)
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
@@ -3395,8 +3395,8 @@ func TestEditMessage(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -3407,8 +3407,8 @@ func TestEditMessage(t *testing.T) {
 			const message2Text = "new message 2"
 			message2Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message2Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1Chats, _, err := deps.testRestClient.GetChats(ctx, user1)
 			require.NoError(t, err, "error in getting chats")
@@ -3431,8 +3431,8 @@ func TestEditMessage(t *testing.T) {
 			const message1TextNew = "new message 1 edited"
 			err = deps.testRestClient.EditMessage(ctx, user1, chat1Id, message1.Id, message1TextNew)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			user1ChatsNew, _, err := deps.testRestClient.GetChats(ctx, user1)
 			require.NoError(t, err, "error in getting chats")
@@ -3456,8 +3456,8 @@ func TestEditMessage(t *testing.T) {
 			const message2TextNew = "new message 2 edited"
 			err = deps.testRestClient.EditMessage(ctx, user1, chat1Id, message2.Id, message2TextNew)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 				func(ee any) bool {
@@ -3576,8 +3576,8 @@ func TestPinMessage(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -3588,8 +3588,8 @@ func TestPinMessage(t *testing.T) {
 			const message2Text = "new message 2"
 			message2Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message2Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			t.Run("pin_unpin", func(t *testing.T) {
 				deps.testOutputEventsAccumulator.Clean()
@@ -3665,8 +3665,8 @@ func TestPinMessage(t *testing.T) {
 			t.Run("edit_message", func(t *testing.T) {
 				err = deps.testRestClient.EditMessage(ctx, user1, chat1Id, message2Id, message2TextNew)
 				require.NoError(t, err, "error in creating message")
-				require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-				require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+				require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 				require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 					func(ee any) bool {
@@ -3807,8 +3807,8 @@ func TestPublishMessage(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -3932,8 +3932,8 @@ func TestEditMessageStillNotExists(t *testing.T) {
 			chat12Id, err := deps.testRestClient.CreateChat(ctx, user1, "chat1Name")
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat12Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			err = deps.testRestClient.EditMessage(ctx, user1, chat12Id, message1Id, message1TextNew)
 			require.NotNil(t, err)
@@ -3970,23 +3970,23 @@ func TestBlog(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const message1Text = "new message 1"
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
 			// await before chat editing
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// probably not needed
 			// it's old behaviour. just check for backward compatibility
 			// actually just marking message as blog should be enough
 			err = deps.testRestClient.EditChat(ctx, user1, chat1Id, chat1Name, client.NewChatOptionBlog(true))
 			require.NoError(t, err)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -4003,8 +4003,8 @@ func TestBlog(t *testing.T) {
 
 			err = deps.testRestClient.MakeMessageBlogPost(ctx, user1, chat1Id, message1Id)
 			require.NoError(t, err, "error in making message blog post")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			blogsW, err := deps.testRestClient.SearchBlogs(ctx)
 			require.NoError(t, err, "error in searching blog posts")
@@ -4024,8 +4024,8 @@ func TestBlog(t *testing.T) {
 
 			err = deps.testRestClient.MakeMessageBlogPost(ctx, user1, chat1Id, message2Id)
 			require.NoError(t, err, "error in making message blog post")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, true, []func(e any) bool{
 				func(ee any) bool {
@@ -4055,8 +4055,8 @@ func TestBlog(t *testing.T) {
 
 			err = deps.testRestClient.EditChat(ctx, user1, chat1Id, chat1Name, client.NewChatOptionBlog(false))
 			require.NoError(t, err, "error in unmaking message blog post")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			blogsNewW, err := deps.testRestClient.SearchBlogs(ctx)
 			require.NoError(t, err, "error in searching blog posts")
 			blogsNew := blogsNewW.Items
@@ -4092,8 +4092,8 @@ func TestChatPaginate(t *testing.T) {
 				require.NoError(t, err, "error in creating chat")
 				assert.True(t, lastChatId > 0)
 			}
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, lastChatId, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -4148,15 +4148,15 @@ func TestChatFuzzySearch(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const chat2Name = "samsung"
 			chat2Id, err := deps.testRestClient.CreateChat(ctx, user1, chat2Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat2Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const searchString1 = "Опубликованный"
 			resp1Search, _, err := deps.testRestClient.GetChats(ctx, user1, client.NewChatGetOptionWithSearch(searchString1))
@@ -4190,8 +4190,8 @@ func TestMessagePaginate(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const messagePrefix = "generated_message"
 
@@ -4200,8 +4200,8 @@ func TestMessagePaginate(t *testing.T) {
 				lastMessageId, err = deps.testRestClient.CreateMessage(ctx, user1, chat1Id, messagePrefix+utils.ToString(i))
 				require.NoError(t, err, "error in creating message")
 			}
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, lastMessageId, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			// get first page
@@ -4281,14 +4281,14 @@ func TestMessageFuzzySearch(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionResend(true))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			chat2Id, err := deps.testRestClient.CreateChat(ctx, user2, chat2Name)
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat2Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const messageText1 = "сообщение Опубликована платформа Node.js 25.0.0"
 
@@ -4300,23 +4300,23 @@ func TestMessageFuzzySearch(t *testing.T) {
 
 			messageId2, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message2Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, messageId2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message3Text = `Рабочей силы еще больше!Иран отвлекает от внутренней повестки. Меж тем, индекс hh.ru (соотношение резюме к вакансиям) в марте резко вырос – 11,4 против 9,8 в феврале. Кажется, вообще впервые такой резкий рост. Напомню, минимум был в июне 2024 - 3,1. Значение от 2 до 3,9 - дефицит соискателей,  4-7,9 - умеренный уровень конкуренции за рабочие места, 8,0–11,9 — высокий уровень конкуренции соискателей за рабочие места.В Москве как и по стране 11,4 (в феврале – 10). В Питере 12,1 (в феврале – 10,5). По профобластям дефицит по-прежнему только в розничной торговле (3,9), и то на грани.Еще в ноябре разбирал (тут и тут) как это все вяжется с данными Росстата по безработице (2,1%).@NewGosplanhttps://stats.hh.ru/---Работа Госплан 2.0`
 
 			_, err = deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message3Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, messageId2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const message4Text = `BASSANOVA - GAUNTLET DOCS LEAKED:$ATOM 2.0WILL CRUSH INFLATION — THE ENDGAME IS HERE #ATOM #cosmosTHE SHOCK DROPCosmos Labs handed Gauntlet (Coinbase/Uniswap tier) the keys to REINVENT $ATOM.16 weeks. Results July. They found the broken model. #Tokenomics #DeFiTHE DIAGNOSIS IS BRUTALPhase 1 rips apart:•Who’s actually holding ATOM?•Why staking dropped off a cliff•How past inflation changes BROKE demand #Crypto #InflationATOM 2.0: ZERO INFLATION ENGINEFees > Security = 0% issuance. First L1 that PAYS YOU TO EXIST.ATOM becomes THE reserve asset for:•Gas - IBC settlement - Interchain Security #Web3 #L1THE KILLER MECHANICS•3-YEAR MELTDOWN: Gradual issuance death•Osmosis cash machine: DEX fees → ATOM buybacks (2.5% supply cap)•Rollup yield: Stake ATOM, secure L2s, collect fees #Staking #YieldTIMING IS NUCLEAR•Gauntlet drops truth bombs July 2026•CometBFT 10k+ TPS live Q2•Bithumb whales positioning NOW #Bullish #WhalesTHE DIRTY SECRETForum buried this RFP for months. Normies sleeping.Maxis knew. Institutions smelled blood. #Insider #FOMO$ATOM isn’t “just another L1.”It’s THE coordination layer eating Solana’s lunch. #CosmosHub #IBCStack or get rekt.RT if you’re loading $ATOM 🚀---crypto`
 			_, err = deps.testRestClient.CreateMessage(ctx, user1, chat1Id, message4Text)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, messageId2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const searchString1 = "Опубликованный"
@@ -4339,14 +4339,14 @@ func TestMessageFuzzySearch(t *testing.T) {
 			// user 1 adds user 2 to chat 1
 			err = deps.testRestClient.AddChatParticipants(ctx, user1, chat1Id, []int64{user2})
 			require.NoError(t, err, "error in adding participant")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// user 2 resends the message from chat 1 to chat 2
 			message1ResentId, err := deps.testRestClient.CreateMessage(ctx, user2, chat2Id, dto.NoMessageContent, client.NewMessageCreateOptionResend(chat1Id, messageId1))
 			require.NoError(t, err, "error in resending message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, message1ResentId, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			// user 2 searches for the message
@@ -4401,8 +4401,8 @@ func TestEventSendingOnUserProfileChange(t *testing.T) {
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			a := user1Avatar
 			err = deps.testEventsPublisher.Publish(ctx, dto.UserAccountEventChanged{
@@ -4481,8 +4481,8 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			// checking message deletion causes reaction deletion
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -4490,20 +4490,20 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, messageText1)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, message1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const reaction = "😀"
 			err = deps.testRestClient.Reaction(ctx, user1, chat1Id, message1Id, reaction)
 			require.NoError(t, err, "error in reacting on message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			err = deps.testRestClient.DeleteMessage(ctx, user1, chat1Id, message1Id)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// assert that the reaction is deleted along with message
 			reactionExists, err := deps.commonProjection.IsReactionExists(ctx, chat1Id, message1Id, reaction)
@@ -4513,8 +4513,8 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			// checking chat deletion causes message deletion
 			chat2Id, err := deps.testRestClient.CreateChat(ctx, user1, chat2Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat2Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -4530,8 +4530,8 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 
 			message2Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat2Id, messageText2)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat2Id, message2Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			messageExists, err := deps.commonProjection.IsMessageExists(ctx, deps.dba, chat2Id, message2Id)
@@ -4542,8 +4542,8 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 
 			err = deps.testRestClient.DeleteChat(ctx, user1, chat2Id)
 			require.NoError(t, err, "error in deleting chat")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
 				func(ee any) bool {
@@ -4578,8 +4578,8 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 			// checking blog's chat deletion causes blog deletion
 			chat3Id, err := deps.testRestClient.CreateChat(ctx, user1, chat3Name, client.NewChatOptionParticipants(user2), client.NewChatOptionBlog(true))
 			require.NoError(t, err, "error in creating chat")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat3Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
@@ -4587,8 +4587,8 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 
 			message3Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat3Id, messageText3)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat3Id, message3Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			blogsNewW, err := deps.testRestClient.SearchBlogs(ctx)
@@ -4600,8 +4600,8 @@ func TestDeleteLeftoversFromDb(t *testing.T) {
 
 			err = deps.testRestClient.DeleteChat(ctx, user1, chat3Id)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			// for sake waiting on all the events were applied
 			require.NoError(t, deps.testOutputEventsAccumulator.AwaitForBufferContainsSpecifiedEvents(deps.cfg.RabbitMQ.MaxWaitForEvents, false, []func(e any) bool{
@@ -4679,14 +4679,14 @@ func TestCleanDeletedUsersData(t *testing.T) {
 
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionParticipants(user2))
 			require.NoError(t, err, "error in creating chat")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			chat2Id, err := deps.testRestClient.CreateChat(ctx, user2, chat2Name)
 			require.NoError(t, err, "error in creating chat")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat2Id, user2, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const messageText1 = "message 1"
@@ -4694,14 +4694,14 @@ func TestCleanDeletedUsersData(t *testing.T) {
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, messageText1)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, message1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			message2Id, err := deps.testRestClient.CreateMessage(ctx, user2, chat2Id, messageText2)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, message2Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			deps.testOutputEventsAccumulator.Clean()
@@ -4743,6 +4743,18 @@ func TestCleanDeletedUsersData(t *testing.T) {
 						len(e.ChatNotification.Participants) == 1 && // in case race condition it's going to fail
 						e.ChatNotification.Participants[0].Id == user1 &&
 						e.ChatNotification.Participants[0].Login == user1Login
+				},
+				func(ee any) bool {
+					e, ok := ee.(*dto.GlobalUserEvent)
+					return ok && e.EventType == dto.EventTypeChatDeleted &&
+						e.UserId == user2 &&
+						e.ChatDeletedDto.Id == chat1Id
+				},
+				func(ee any) bool {
+					e, ok := ee.(*dto.GlobalUserEvent)
+					return ok && e.EventType == dto.EventTypeChatDeleted &&
+						e.UserId == user2 &&
+						e.ChatDeletedDto.Id == chat2Id
 				},
 			}))
 
@@ -4800,16 +4812,16 @@ func TestCleanAbandonedChats(t *testing.T) {
 
 			chat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name)
 			require.NoError(t, err, "error in creating chat")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForChatExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, user1, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			const messageText1 = "message 1"
 
 			message1Id, err := deps.testRestClient.CreateMessage(ctx, user1, chat1Id, messageText1)
 			require.NoError(t, err, "error in creating message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			waitForMessageExists(deps.lgr, deps.commonProjection, deps.dba, chat1Id, message1Id, deps.cfg.Cqrs.SleepBeforePolling, deps.cfg.Cqrs.PollingMaxTimes)
 
 			err = deps.commonProjection.UnsafeDeleteParticipantForTest(ctx, deps.dba, chat1Id, user1)
@@ -4861,22 +4873,22 @@ func TestAccess(t *testing.T) {
 			blogChat1Id, err := deps.testRestClient.CreateChat(ctx, user1, chat1Name, client.NewChatOptionBlog(true))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, blogChat1Id > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const message1Text = "new blog head message 1"
 			_, err = deps.testRestClient.CreateMessage(ctx, user1, blogChat1Id, message1Text)
 			require.NoError(t, err, "error in creating message")
 			// await before chat editing
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const chat2Name = "new chat 2 donor"
 			chat2DonorId, err := deps.testRestClient.CreateChat(ctx, user1, chat2Name, client.NewChatOptionResend(true))
 			require.NoError(t, err, "error in creating chat")
 			assert.True(t, chat2DonorId > 0)
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			const fileItemUUid = "01a0bc40-72eb-7c4e-a3f9-4ba8268f6ecd"
 			const timest = 1789862617
@@ -4891,13 +4903,13 @@ func TestAccess(t *testing.T) {
 			messageId2Donor, err := deps.testRestClient.CreateMessage(ctx, user1, chat2DonorId, message2Text)
 			require.NoError(t, err, "error in creating message")
 			// await before chat editing
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 
 			commentMessageResentId2, err := deps.testRestClient.CreateMessage(ctx, user1, blogChat1Id, "", client.NewMessageCreateOptionResend(chat2DonorId, messageId2Donor))
 			require.NoError(t, err, "error in resending message")
-			require.NoError(t, kafka.WaitForAllEventsProcessedChat(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
-			require.NoError(t, kafka.WaitForAllEventsProcessedUser(deps.lgr, deps.cfg, deps.admCl, deps.lc), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedChatWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
+			require.NoError(t, kafka.WaitForAllEventsProcessedUserWithTimeout(deps.lgr, deps.cfg, deps.admCl, deps.lc, deps.cfg.Kafka.Consumer.MaxWaitForEvents), "error in waiting for processing events")
 			assert.True(t, commentMessageResentId2 > 0)
 
 			blogsW, err := deps.testRestClient.SearchBlogs(ctx)

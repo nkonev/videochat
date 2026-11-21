@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
+	"time"
+
 	"github.com/sanity-io/litter"
 	"github.com/streadway/amqp"
 	"go.opentelemetry.io/otel"
@@ -13,14 +16,12 @@ import (
 	"nkonev.name/chat/logger"
 	"nkonev.name/chat/rabbitmq"
 	"nkonev.name/chat/type_registry"
-	"slices"
-	"time"
 )
 
 type TestEventAccumulator struct {
 	cfg          *config.AppConfig
 	lgr          *logger.LoggerWrapper
-	eventsBuffer []any
+	eventsBuffer chan any
 }
 
 type TestOutputEventAccumulator struct {
@@ -28,7 +29,11 @@ type TestOutputEventAccumulator struct {
 }
 
 func (p *TestEventAccumulator) OnEvent(ctx context.Context, e any) {
-	p.eventsBuffer = append(p.eventsBuffer, e)
+	p.eventsBuffer <- e
+}
+
+func newBufferedChan() chan any {
+	return make(chan any, 4096)
 }
 
 func NewRabbitTestOutputEventAccumulator(cfg *config.AppConfig, lgr *logger.LoggerWrapper) *TestOutputEventAccumulator {
@@ -36,7 +41,7 @@ func NewRabbitTestOutputEventAccumulator(cfg *config.AppConfig, lgr *logger.Logg
 		TestEventAccumulator{
 			cfg:          cfg,
 			lgr:          lgr,
-			eventsBuffer: make([]any, 0),
+			eventsBuffer: newBufferedChan(),
 		},
 	}
 }
@@ -50,96 +55,117 @@ func NewRabbitTestNotificationEventAccumulator(cfg *config.AppConfig, lgr *logge
 		TestEventAccumulator{
 			cfg:          cfg,
 			lgr:          lgr,
-			eventsBuffer: make([]any, 0),
+			eventsBuffer: newBufferedChan(),
 		},
 	}
 }
 
 func (p *TestEventAccumulator) Clean() {
-	p.eventsBuffer = []any{}
+	p.reset()
+}
+
+func (p *TestEventAccumulator) reset() {
+	for {
+		select {
+		case <-p.eventsBuffer:
+			// just drain
+		default:
+			return
+		}
+	}
 }
 
 // there can be more events than asserters
 
-// AssertHasEventsOrdered returns true if all the asserters are matched events in order of asserters
-func (p *TestEventAccumulator) AssertHasEventsOrdered(asserters []func(e any) bool) bool {
-	j := 0 // both second pointer and num of success comparisons
+// assertHasEventsOrdered returns true if all the asserters are matched events in order of asserters
+func (p *TestEventAccumulator) assertHasEventsOrdered(ctx context.Context, asserters []func(e any) bool) error {
+	matched := 0
 
-	for _, e := range p.eventsBuffer {
-		if j >= len(asserters) { // bound check
-			break
-		}
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timed out ordered: %w", ctx.Err())
+		case e, ok := <-p.eventsBuffer:
+			if !ok {
+				return errors.New("buffer is closed")
+			}
 
-		if asserters[j](e) {
-			p.lgr.Info("Ordered - satisfying asserter with index", "index", j)
-			j++
-		}
-	}
+			if p.cfg.RabbitMQ.DumpTestAccumulator {
+				litter.Dump(e)
+			}
 
-	return j == len(asserters)
-}
+			if matched > len(asserters) { // bound check
+				return errors.New("matched is greater than len(asserters), it should never happen")
+			}
 
-// AssertHasEventsUnordered returns true if all the asserters are matched events in any order
-func (p *TestEventAccumulator) AssertHasEventsUnordered(asserters []func(e any) bool) bool {
-	assertersCopy := make([]func(e any) bool, len(asserters))
-	copy(assertersCopy, asserters)
+			if asserters[matched](e) {
+				p.lgr.Info("Ordered - satisfying asserter with index", "index", matched)
+				matched++
 
-	for eventIdx, e := range p.eventsBuffer {
-		for j, c := range assertersCopy {
-			if c(e) {
-				p.lgr.Info("Unordered - satisfying asserter for event with index", "index", eventIdx)
-				assertersCopy = slices.Delete(assertersCopy, j, j+1)
-				break // inner loop
+				if matched == len(asserters) {
+					return nil // ok
+				}
 			}
 		}
 	}
+}
 
-	return len(assertersCopy) == 0
+// assertHasEventsUnordered returns true if all the asserters are matched events in any order
+func (p *TestEventAccumulator) assertHasEventsUnordered(ctx context.Context, asserters []func(e any) bool) error {
+	remainingAsserters := make([]func(e any) bool, len(asserters))
+	copy(remainingAsserters, asserters)
+
+	eventIdx := 0
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timed out unordered: %w", ctx.Err())
+		case e, ok := <-p.eventsBuffer:
+			if !ok {
+				return errors.New("buffer is closed")
+			}
+
+			if p.cfg.RabbitMQ.DumpTestAccumulator {
+				litter.Dump(e)
+			}
+
+			for j, asserter := range remainingAsserters {
+				if asserter(e) {
+					p.lgr.Info("Unordered - satisfying asserter for event with index", "index", eventIdx)
+					remainingAsserters = slices.Delete(remainingAsserters, j, j+1)
+
+					if len(remainingAsserters) == 0 {
+						return nil // ok
+					}
+
+					break // inner loop
+				}
+			}
+
+			eventIdx++
+		}
+	}
 }
 
 func (p *TestEventAccumulator) AwaitForBufferContainsSpecifiedEvents(duration time.Duration, ordered bool, comparators []func(e any) bool) error {
-	du := p.cfg.RabbitMQ.CheckAreEventsProcessedInterval
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, duration)
+	defer cancel()
 
-	startTime := time.Now()
-
-	for {
-		currTime := time.Now()
-		if startTime.Add(duration).Before(currTime) {
-			return fmt.Errorf("timeout error, there no specified events in %v", duration)
-		}
-
-		p.lgr.Info("Checking condition, the buffer is")
-		if p.cfg.RabbitMQ.DumpTestAccumulator {
-			litter.Dump(p.eventsBuffer)
-		}
-
-		fv := func() bool {
-			defer func() {
-				if r := recover(); r != nil {
-					fmt.Println("panic occured: ", r)
-				}
-			}()
-			if ordered {
-				if p.AssertHasEventsOrdered(comparators) {
-					p.lgr.Info("Buffer contains the specified events, exiting successfully")
-					return true
-				}
-			} else {
-				if p.AssertHasEventsUnordered(comparators) {
-					p.lgr.Info("Buffer contains the specified events, exiting successfully")
-					return true
-				}
+	fve := func() error {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("panic occured: ", r)
 			}
-
-			return false
 		}()
-		if fv {
-			return nil // success exit
+		if ordered {
+			return p.assertHasEventsOrdered(ctx, comparators)
+		} else {
+			return p.assertHasEventsUnordered(ctx, comparators)
 		}
-
-		time.Sleep(du)
-	}
-
+	}()
+	return fve
 }
 
 type TestOutputEventListener func(*amqp.Delivery) error

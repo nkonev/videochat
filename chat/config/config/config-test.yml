@@ -19,6 +19,8 @@ kafka:
     clientId: "chat-consumer"
     batchSize: 1024
     fetchMaxWait: 500ms
+    # see also rabbitmq.maxWaitForEvents
+    maxWaitForEvents: 1m
 
 otlp:
   endpoint: localhost:34317
@@ -110,7 +112,7 @@ blog:
 
 rabbitmq:
   url: "amqp://videoChat:videoChatPazZw0rd@127.0.0.1:36672"
-  checkAreEventsProcessedInterval: 250ms
+  # see also kafka.consumer.maxWaitForEvents
   maxWaitForEvents: 1m
   dumpTestAccumulator: true
   prettyLog: true

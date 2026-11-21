@@ -11,7 +11,7 @@ import (
 
 	"nkonev.name/chat/app"
 
-	"github.com/nkonev/args-parser"
+	parser "github.com/nkonev/args-parser"
 	"github.com/traefik/paerser/env"
 	"github.com/traefik/paerser/file"
 	"github.com/traefik/paerser/flag"
@@ -39,9 +39,10 @@ type KafkaProducerConfig struct {
 }
 
 type KafkaConsumerConfig struct {
-	ClientId     string
-	BatchSize    int
-	FetchMaxWait time.Duration
+	ClientId         string
+	BatchSize        int
+	FetchMaxWait     time.Duration
+	MaxWaitForEvents time.Duration // for tests
 }
 
 type OtlpConfig struct {
@@ -174,11 +175,10 @@ type TetATetConfig struct {
 }
 
 type RabbitMQConfig struct {
-	Url                             string
-	Debug                           bool
-	CheckAreEventsProcessedInterval time.Duration // for tests
-	MaxWaitForEvents                time.Duration // for tests
-	DumpTestAccumulator             bool          // for tests
+	Url                 string
+	Debug               bool
+	MaxWaitForEvents    time.Duration // for tests
+	DumpTestAccumulator bool          // for tests
 
 	Dump      bool
 	PrettyLog bool
