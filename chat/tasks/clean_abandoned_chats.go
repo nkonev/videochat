@@ -5,12 +5,12 @@ import (
 
 	postgresLock "github.com/nkonev/dcron/plugin/lock/postgres_pgx5"
 	otelTrace "github.com/nkonev/dcron/plugin/trace/otel"
-	"nkonev.name/chat/utils"
 
 	"nkonev.name/chat/config"
 	"nkonev.name/chat/cqrs"
 	"nkonev.name/chat/db"
 	"nkonev.name/chat/logger"
+	"nkonev.name/chat/utils"
 
 	"github.com/nkonev/dcron"
 	"go.opentelemetry.io/otel"

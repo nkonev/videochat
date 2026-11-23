@@ -812,10 +812,10 @@ github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f/go.mod h1:ZdcZmHo+
 github.com/nakagami/firebirdsql v0.0.0-20190310045651-3c02a58cfed8/go.mod h1:86wM1zFnC6/uDBfZGNwB65O+pR2OFi5q/YQaEUid1qA=
 github.com/ncw/swift v1.0.47/go.mod h1:23YIA4yWVnGwv2dQlN4bB7egfYX6YLn0Yo/S6zZO/ZM=
 github.com/neo4j/neo4j-go-driver v1.8.1-0.20200803113522-b626aa943eba/go.mod h1:ncO5VaFWh0Nrt+4KT4mOZboaczBZcLuHrG+/sUeP8gI=
-github.com/nkonev/dcron v1.9.4 h1:JMoOj4GDzaU31dq6yixctk4M5IePa/AKKUp8MHGKjek=
-github.com/nkonev/dcron v1.9.4/go.mod h1:BSctd7iI34ZNc2QsrPldNzbw5FcyVcQs3d2TCboOlKg=
-github.com/nkonev/dcron/plugin/lock/redis v1.2.4 h1:wQtBZjgULYoG7G9X2EGKadsxAJMUPAesnGIhAl7iz98=
-github.com/nkonev/dcron/plugin/lock/redis v1.2.4/go.mod h1:ITy6DvCoosD10L81oSipoUh7yBL5/3MN9Mti0+KzPp8=
+github.com/nkonev/dcron v1.11.0 h1:q2JLK7us95yLi5cRQAr8E8Iop5nQI30b/42IwJItcdg=
+github.com/nkonev/dcron v1.11.0/go.mod h1:BSctd7iI34ZNc2QsrPldNzbw5FcyVcQs3d2TCboOlKg=
+github.com/nkonev/dcron/plugin/lock/redis v1.3.0 h1:gwkfh2DtmpO5zuhS9EhgjdxHsDZeJlby+xdSOzibR/A=
+github.com/nkonev/dcron/plugin/lock/redis v1.3.0/go.mod h1:2ribtirvvg6L9lnT40ALIaDXYvTALM1qtzGa/hdjlfU=
 github.com/nkonev/dcron/plugin/trace/otel v1.2.3 h1:8aYcyldqBGsb8by1wM+yz7vbJu0lsKX+T9hs8BasKL0=
 github.com/nkonev/dcron/plugin/trace/otel v1.2.3/go.mod h1:I0Ebssew0rm1haJSnHqKjjXiL+67US8ehIvkdXWG/O0=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
