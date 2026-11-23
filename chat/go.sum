@@ -151,10 +151,10 @@ github.com/nkonev/args-parser v0.0.1 h1:zuAN+fk7/tQPkHCgoaqWBBJ3YrJdehS5HggopXRm
 github.com/nkonev/args-parser v0.0.1/go.mod h1:r0wmR4fPsINhzILGPm7uPMz8GsjWF42xjIzR7TV0g2A=
 github.com/nkonev/dcron v1.9.4 h1:JMoOj4GDzaU31dq6yixctk4M5IePa/AKKUp8MHGKjek=
 github.com/nkonev/dcron v1.9.4/go.mod h1:BSctd7iI34ZNc2QsrPldNzbw5FcyVcQs3d2TCboOlKg=
-github.com/nkonev/dcron/plugin/lock/postgres_pgx5 v1.1.7 h1:WGTvW4YgNCxM+Amb4BIUjLblPzDkE+EpVqIfMeUMmEY=
-github.com/nkonev/dcron/plugin/lock/postgres_pgx5 v1.1.7/go.mod h1:FsXfxHsr0yqM/z1Qwv5gPu1hroh85mAz2LEjHmahgxM=
-github.com/nkonev/dcron/plugin/trace/otel v1.2.2 h1:20b3vDwWXad1sdsR5wpyJLAUXoUOuJH1kQhf/cMUKeI=
-github.com/nkonev/dcron/plugin/trace/otel v1.2.2/go.mod h1:96y0TkxRDR0egKXI0TGjRU4bnWnxjG3+a1o35m/OtjE=
+github.com/nkonev/dcron/plugin/lock/postgres_pgx5 v1.1.8 h1:Uzq/YscsvHS9A0AsLQL2VnosJoKhf2m+LZL3XTgUfHw=
+github.com/nkonev/dcron/plugin/lock/postgres_pgx5 v1.1.8/go.mod h1:0wgsnU0bt9zN6ZdPafA+pMxpDLWXgseYbg2BAejigfk=
+github.com/nkonev/dcron/plugin/trace/otel v1.2.3 h1:8aYcyldqBGsb8by1wM+yz7vbJu0lsKX+T9hs8BasKL0=
+github.com/nkonev/dcron/plugin/trace/otel v1.2.3/go.mod h1:I0Ebssew0rm1haJSnHqKjjXiL+67US8ehIvkdXWG/O0=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.1 h1:y0fUlFfIZhPF1W537XOLg0/fcx6zcHCJwooC2xJA040=

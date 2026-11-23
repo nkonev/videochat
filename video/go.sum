@@ -875,10 +875,10 @@ github.com/ncw/swift v1.0.47/go.mod h1:23YIA4yWVnGwv2dQlN4bB7egfYX6YLn0Yo/S6zZO/
 github.com/neo4j/neo4j-go-driver v1.8.1-0.20200803113522-b626aa943eba/go.mod h1:ncO5VaFWh0Nrt+4KT4mOZboaczBZcLuHrG+/sUeP8gI=
 github.com/nkonev/dcron v1.9.4 h1:JMoOj4GDzaU31dq6yixctk4M5IePa/AKKUp8MHGKjek=
 github.com/nkonev/dcron v1.9.4/go.mod h1:BSctd7iI34ZNc2QsrPldNzbw5FcyVcQs3d2TCboOlKg=
-github.com/nkonev/dcron/plugin/lock/redis v1.2.3 h1:zeL5rfOj196PLZOWAF+LChtEs8+OoM6A09vGXquBYpo=
-github.com/nkonev/dcron/plugin/lock/redis v1.2.3/go.mod h1:2s2nJubU7pyiYlBQExArk/zJI69tb/KW/TulMEYgS2s=
-github.com/nkonev/dcron/plugin/trace/otel v1.2.2 h1:20b3vDwWXad1sdsR5wpyJLAUXoUOuJH1kQhf/cMUKeI=
-github.com/nkonev/dcron/plugin/trace/otel v1.2.2/go.mod h1:96y0TkxRDR0egKXI0TGjRU4bnWnxjG3+a1o35m/OtjE=
+github.com/nkonev/dcron/plugin/lock/redis v1.2.4 h1:wQtBZjgULYoG7G9X2EGKadsxAJMUPAesnGIhAl7iz98=
+github.com/nkonev/dcron/plugin/lock/redis v1.2.4/go.mod h1:ITy6DvCoosD10L81oSipoUh7yBL5/3MN9Mti0+KzPp8=
+github.com/nkonev/dcron/plugin/trace/otel v1.2.3 h1:8aYcyldqBGsb8by1wM+yz7vbJu0lsKX+T9hs8BasKL0=
+github.com/nkonev/dcron/plugin/trace/otel v1.2.3/go.mod h1:I0Ebssew0rm1haJSnHqKjjXiL+67US8ehIvkdXWG/O0=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
 github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5/go.mod h1:vsDQFd/mU46D+Z4whnwzcISnGGzXWMclvtLoiIKAKIo=
