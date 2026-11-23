@@ -12,7 +12,7 @@ require (
 	github.com/jackc/pgtype v1.10.0
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo/v4 v4.12.0
-	github.com/nkonev/dcron v1.9.1
+	github.com/nkonev/dcron v1.9.4
 	github.com/nkonev/dcron/plugin/lock/redis v1.2.1
 	github.com/nkonev/dcron/plugin/trace/otel v1.2.0
 	github.com/redis/go-redis/v9 v9.17.2

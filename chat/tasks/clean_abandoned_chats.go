@@ -37,7 +37,7 @@ func CleanAbandonedChatsScheduler(
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.cleanAbandonedChats"),
 		postgresLock.WithKeys(utils.PostgresLockIdKeyChat, utils.PostgresLockIdKeyCleanAbandonedChats),
-		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunning),
+		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunningSkipNew),
 	)
 
 	return &CleanAbandonedChatsTask{job}

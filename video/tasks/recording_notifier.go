@@ -56,7 +56,7 @@ func RecordingNotifierScheduler(
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.RecordingNotifier"),
 		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
-		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunning),
+		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunningSkipNew),
 	)
 
 	return &RecordingNotifierTask{job}

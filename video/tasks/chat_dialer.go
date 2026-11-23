@@ -191,7 +191,7 @@ func ChatDialerScheduler(
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.ChatDialer"),
 		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
-		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunning),
+		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunningSkipNew),
 	)
 
 	return &ChatDialerTask{job}

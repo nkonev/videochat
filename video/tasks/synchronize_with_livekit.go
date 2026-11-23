@@ -250,7 +250,7 @@ func SynchronizeWithLivekitSheduler(
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.SynchronizeWithLivekit"),
 		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
-		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunning),
+		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunningSkipNew),
 	)
 
 	return &SynchronizeWithLivekitTask{job}

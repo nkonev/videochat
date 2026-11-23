@@ -37,7 +37,7 @@ func ActualizeMetadataCacheScheduler(
 	},
 		otelTrace.WithTracing(service.tracer, "scheduler.ActualizeMetadataCache"),
 		redisLock.WithLockTTL(viper.GetDuration("schedulers."+key+".expiration")),
-		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunning),
+		dcron.WithOverlappingBehaviour(dcron.OverlappingBehaviourKeepOldRunningSkipNew),
 	)
 
 	return &ActualizeMetadataCacheTask{job}
