@@ -10,8 +10,8 @@ require (
 	github.com/livekit/protocol v1.49.0
 	github.com/livekit/server-sdk-go/v2 v2.18.1
 	github.com/nkonev/dcron v1.9.4
-	github.com/nkonev/dcron/plugin/lock/redis v1.2.2
-	github.com/nkonev/dcron/plugin/trace/otel v1.2.1
+	github.com/nkonev/dcron/plugin/lock/redis v1.2.3
+	github.com/nkonev/dcron/plugin/trace/otel v1.2.2
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.20.0
