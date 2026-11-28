@@ -409,6 +409,8 @@ export default {
         },
 
         async onProfileSet(){
+            this.checkFrontendFreshness();
+            
             this.chatStore.incrementProgressCount(); // the counterpart for this call is in onWsInitialized()
 
             this.chatStore.incrementProgressCount();
@@ -1056,6 +1058,8 @@ export default {
                 // })
               }
             })
+          } else {
+            console.info("embedded's git hash isn't set, it's appeared a local")
           }
         },
         onAlert(value) {
@@ -1130,8 +1134,6 @@ export default {
     mounted() {
         window.addEventListener("resize", this.onWindowResized);
         window.addEventListener("visibilitychange", this.onVisibilityChange);
-
-        this.checkFrontendFreshness();
 
         createGraphQlClient(this);
 
